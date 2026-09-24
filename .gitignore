@@ -16,3 +16,6 @@ Thumbs.db
 # Build artifacts (temp)
 dist_build/
 scratch/
+
+# VS Code Extension (desktop client, excluded from server repo)
+vscode-extension/
