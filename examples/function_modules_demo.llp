@@ -1,0 +1,51 @@
+visibility: All
+
+/* ===============================================================
+   Démonstration LLP : Paramètres de fonction vs Modules de fonction
+   =============================================================== *\
+
+/*
+  1. La fonction Launch déclare :
+     - Des paramètres standards : 'appName' et 'port'
+     - Un module interne : 'module DevMode then ... end'
+
+  La fonction connaît déjà tout le code de DevMode.
+  C'est le développeur lors de l'appel qui décide s'il active le mode dev
+  ou s'il paramètre ce que le mode dev peut modifier/inspecter ou non.
+*\
+function Launch(appName, port) then
+    print("[1] Démarrage standard de :", appName, "sur le port :", port)
+
+    /- Module interne DevMode : exécuté uniquement si activé à l'appel \
+    module DevMode then
+        print("  -> 🔧 [MODULE DevMode ACTIVÉ]")
+        print("  -> Droits de dev accordés pour tester et injecter des valeurs.")
+        print("  -> Interface d'administration et surveillance des flux serveur activée.")
+
+        /- Le module vérifie les autorisations configurées par le développeur \
+        if DevMode.canBypassSecurity == True then
+            print("  -> [DEV ALERTE] Contournement de sécurité ACTIVÉ par le développeur.")
+        else
+            print("  -> [DEV SÉCURITÉ] Vérifications de sécurité conservées pour le test.")
+        end
+
+        if DevMode.canInspectServerData == True then
+            print("  -> [DEV RÉSEAU] Inspecteur des requêtes/réponses serveur en direct ON.")
+        end
+    end
+
+    print("[2] Logiciel prêt à l'emploi.")
+end
+
+print("=== TEST A : Appel standard sans le module DevMode ===")
+Launch("MonApplication", 8080)
+
+print("\n=== TEST B : Appel avec activation simple de DevMode ===")
+Launch("MonApplication", 8080, DevMode: True)
+
+print("\n=== TEST C : Appel avec configuration précise des droits du DevMode ===")
+General devOptions = Instance.new("DevConfig")
+devOptions.canBypassSecurity = False
+devOptions.canInspectServerData = True
+
+Launch("MonApplication", 8080, DevMode: devOptions)

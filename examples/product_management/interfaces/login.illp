@@ -1,0 +1,33 @@
+visibility: All
+
+/* ===================================================
+   Login Interface (.illp) - Page 1
+   Product Management Application - Lolpaon Pro
+   Nested components with navigation action to dashboard.illp
+   =================================================== *\
+
+Background "LoginWindow" responsive: true minWidth: "380px" maxWidth: "520px" minHeight: "560px" {
+    Card "LoginCard" title: "Sign In - Product Management" {
+        Row "LogoRow" {
+            Image "LoginLogo" src: "assets/logo.png"
+            Text "LoginTitle" content: "Lolpaon Store Manager"
+        }
+
+        Row "SubtitleRow" {
+            Text "Subtitle" content: "Secure authentication backed by .cllpdb database"
+        }
+
+        Grid "FieldsGrid" columns: 1 {
+            TextInput "InputUsername" placeholder: "Username (e.g. admin)..."
+            TextInput "InputPassword" placeholder: "Secure password..."
+        }
+
+        Row "OptionsRow" {
+            Checkbox "CheckSession" label: "Enable 2-minute active session" checked: true
+        }
+
+        Row "ActionRow" {
+            Button "BtnLogin" text: "Sign In to Dashboard ➔" targetPage: "dashboard.illp"
+        }
+    }
+}

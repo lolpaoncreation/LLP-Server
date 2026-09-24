@@ -1,0 +1,47 @@
+visibility: All
+
+/* ===================================================
+   Librairie Standard LLP : Validation d'Interface (Lecture Seule)
+   Fonctions et règles de validation pour formulaires et modèles
+   =================================================== *\
+
+func ValidateRequiredField(string value, string fieldName) {
+    bool ok = UIValidator.ValidateRequired(value)
+    if (!ok) {
+        UIValidator.ShowError(fieldName, "Ce champ est obligatoire.")
+        return false
+    }
+    return true
+}
+
+func ValidatePositivePrice(float price) {
+    if (price <= 0.0) {
+        UIValidator.ShowError("Prix", "Le prix unitaire doit être strictement supérieur à zéro.")
+        return false
+    }
+    return true
+}
+
+func ValidateStockQuantity(int stock) {
+    if (stock < 0) {
+        UIValidator.ShowError("Stock", "Le stock disponible ne peut pas être négatif.")
+        return false
+    }
+    return true
+}
+
+func ValidateProductForm(string name, float price, int stock) {
+    bool nameOk = ValidateRequiredField(name, "Nom du produit")
+    if (!nameOk) {
+        return false
+    }
+    bool priceOk = ValidatePositivePrice(price)
+    if (!priceOk) {
+        return false
+    }
+    bool stockOk = ValidateStockQuantity(stock)
+    if (!stockOk) {
+        return false
+    }
+    return true
+}

@@ -1,0 +1,51 @@
+// ============================================================================
+// Démonstration Sécurité Matérielle (HWID) & Signature Asymétrique Ed25519
+// ============================================================================
+visibility: All
+
+print("==============================================================")
+print("🔒 LLP - SÉCURITÉ MATÉRIELLE MACHINE-BOUND & SIGNATURE ED25519")
+print("==============================================================")
+
+// 1. Empreinte Matérielle Fixe (Inamovible)
+General devId = Device.GetId()
+General fingerprint = Device.GetFingerprint()
+General sealed = Device.IsKeySealed()
+General pubKey = Device.GetPublicKey()
+
+print("[1] Empreinte de l'appareil hôte :")
+print("    - Identifiant Appareil :", devId)
+print("    - Empreinte HWID (HMAC-SHA256) :", fingerprint)
+print("    - Clé Ed25519 scellée sur le matériel local :", sealed)
+
+// 2. Signature Cryptographique Dynamique
+General method = "POST"
+General path = "/api/rpc"
+General payload = "{\"service\":\"Orders\",\"method\":\"get\",\"args\":[12]}"
+
+General sigInfo = Device.SignPayload(method, path, payload)
+print("\n[2] Signature d'une trame RPC :")
+print("    - Nonce anti-rejeu :", sigInfo.nonce)
+print("    - Horodatage :", sigInfo.timestamp)
+print("    - Signature Ed25519 :", sigInfo.signature)
+
+// 3. Vérification de la signature
+General isValid = Device.VerifySignature(pubKey, sigInfo.signature, sigInfo.nonce, sigInfo.timestamp, method, payload)
+print("    - Signature vérifiée mathématiquement :", isValid)
+
+// 4. Test d'invalidation sur payload altéré
+General alteredPayload = "{\"service\":\"Orders\",\"method\":\"get\",\"args\":[9999]}"
+General isAlteredValid = Device.VerifySignature(pubKey, sigInfo.signature, sigInfo.nonce, sigInfo.timestamp, method, alteredPayload)
+print("    - Payload falsifié validé (doit être false) :", isAlteredValid)
+
+// 5. Fonctions d'administration et révocation d'urgence côté Serveur
+print("\n[3] Gestion de la flotte et révocation d'urgence (Server) :")
+Server.RevokeDevice(devId)
+General isRevoked = Server.IsDeviceRevoked(devId)
+print("    - Révocation immédiate de l'appareil :", isRevoked)
+
+Server.UnrevokeDevice(devId)
+General isStillRevoked = Server.IsDeviceRevoked(devId)
+print("    - Statut révoqué après réhabilitation :", isStillRevoked)
+
+print("\n✨ Sécurité matérielle & cryptographique 100% opérationnelle !")

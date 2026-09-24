@@ -1,0 +1,30 @@
+print("===================================================")
+print("     LLP Lightweight Client App (Remote Server)    ")
+print("===================================================")
+
+// 1. Inspect Hardware Identity (Non-spoofable)
+General myDeviceId = Device.GetId()
+print("[Client App] Unique Device Identifier:", myDeviceId)
+print("[Client App] Operating Platform:", Device.GetPlatform())
+print("[Client App] Hardware Anchor Status:", Device.IsTrusted())
+
+// 2. Connect to Remote Server via IP / Domain & Port
+print("\n[Client App] Connecting to remote server...")
+Client.Connect("127.0.0.1", 8991)
+print("[Client App] Configured Server URL:", Client.GetServerUrl())
+
+// 3. Authenticate with Remote Server
+print("\n[Client App] Authenticating device on remote server...")
+General loginResponse = Client.Login("client_tester", "secret_pass_123")
+print("[Client App] Server Login Response:", loginResponse)
+
+// 4. Request Protected Backend Data
+print("\n[Client App] Fetching remote data with hardware credentials...")
+General dataResponse = Client.Get("/api/secure-data")
+print("[Client App] Data Received from Server:", dataResponse)
+
+// 5. Query Server Info
+General infoResponse = Client.Get("/api/info")
+print("[Client App] Server Status Info:", infoResponse)
+
+print("\n[SUCCESS] Client-Server communication with device anti-spoofing verified!")

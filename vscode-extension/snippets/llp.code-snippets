@@ -1,0 +1,239 @@
+{
+  "Header Visibility All": {
+    "prefix": "vis-all",
+    "body": [
+      "visibility: All\n$0"
+    ],
+    "description": "Déclare la visibilité globale pour ce fichier"
+  },
+  "Header Visibility Package": {
+    "prefix": "vis-package",
+    "body": [
+      "visibility: Package\n$0"
+    ],
+    "description": "Déclare la visibilité limitée au package/dossier"
+  },
+  "If Then Else End": {
+    "prefix": "ifthen",
+    "body": [
+      "if ${1:condition} then",
+      "\t${2:// code si vrai}",
+      "else",
+      "\t${3:// code si faux}",
+      "end"
+    ],
+    "description": "Structure conditionnelle if then else end"
+  },
+  "For In End": {
+    "prefix": "forend",
+    "body": [
+      "for ${1:item} in ${2:liste} then",
+      "\t${3:// code pour chaque élément}",
+      "end"
+    ],
+    "description": "Boucle for in end"
+  },
+  "While End": {
+    "prefix": "whileend",
+    "body": [
+      "while ${1:condition} then",
+      "\t${2:// code}",
+      "end"
+    ],
+    "description": "Boucle while end"
+  },
+  "Comment Block LLP": {
+    "prefix": "com-block",
+    "body": [
+      "/* ${1:Commentaire multi-lignes} *\\"
+    ],
+    "description": "Commentaire multi-lignes /* ... *\\"
+  },
+  "Comment Line LLP": {
+    "prefix": "com-line",
+    "body": [
+      "/- ${1:Commentaire mono-ligne}"
+    ],
+    "description": "Commentaire mono-ligne /-"
+  },
+  "Comment Inline Code": {
+    "prefix": "com-code",
+    "body": [
+      "/- ${1:texte commenté} { ${2:Global i = 2} } ${3:suite commentaire} \\"
+    ],
+    "description": "Commentaire inline avec code exécutable non commenté entre accolades"
+  },
+  "UI Template ILLP": {
+    "prefix": "ui-illp",
+    "body": [
+      "visibility: All",
+      "",
+      "/- Interface Lolpaon (.illp)",
+      "Background \"MainContainer\" responsive: true {",
+      "\tText \"TitreApp\" content: \"${1:Mon Application}\"",
+      "\tTextInput \"NomUtilisateur\" placeholder: \"${2:Entrez votre nom...}\"",
+      "\tListButton \"OptionsList\" choices: [\"${3:Choix A}\", \"${4:Choix B}\", \"${5:Choix C}\"]",
+      "\tItemBox \"SelecteurItem\" default: \"${6:Selectionner...}\" items: [\"Item 1\", \"Item 2\"]",
+      "\tImage \"LogoApp\" src: \"assets/logo.png\"",
+      "\tButton \"BtnValider\" text: \"Valider\"",
+      "}"
+    ],
+    "description": "Modèle d'interface graphique pour fichier .illp"
+  },
+  "UI Style Template ILLPS": {
+    "prefix": "ui-illps",
+    "body": [
+      "visibility: All",
+      "",
+      "/- Feuille de Style Lolpaon (.illps)",
+      "Background.MainContainer {",
+      "\tbackground: #1e1e2e",
+      "\tpadding: 20px",
+      "\tresponsive: true",
+      "}",
+      "",
+      "Text#TitreApp {",
+      "\tcolor: #cdd6f4",
+      "\tfontSize: 24px",
+      "\tfont: bold",
+      "}",
+      "",
+      "Button#BtnValider {",
+      "\tbackground: #89b4fa",
+      "\tcolor: #11111b",
+      "\tborderRadius: 8px",
+      "\tpadding: 10px 20px",
+      "}"
+    ],
+    "description": "Modèle de style d'interface pour fichier .illps"
+  },
+  "App Launch WindowSize": {
+    "prefix": "app-launch",
+    "body": [
+      "App.Launch(WindowSize: ${1:250} : ${2:250})"
+    ],
+    "description": "Lance l'application avec dimensions de fenêtre fixes en pixels"
+  },
+  "App Launch DevMode": {
+    "prefix": "app-dev",
+    "body": [
+      "App.Launch(DevMode: ${1|True,False|})"
+    ],
+    "description": "Lance l'application en mode développeur"
+  },
+  "App Lock": {
+    "prefix": "app-lock",
+    "body": [
+      "App.Lock()"
+    ],
+    "description": "Verrouille le redimensionnement de la fenêtre à la souris et désactive le plein écran"
+  },
+  "App Silence": {
+    "prefix": "app-silence",
+    "body": [
+      "App.Silence()"
+    ],
+    "description": "Fait tourner l'application en arrière-plan sans interface (en veille/inactif)"
+  },
+  "App Silence RunBack": {
+    "prefix": "app-runback",
+    "body": [
+      "App.Silence(RunBack: True)"
+    ],
+    "description": "Fait tourner l'application activement en fond"
+  },
+  "App Close": {
+    "prefix": "app-close",
+    "body": [
+      "App.Close()"
+    ],
+    "description": "Force l'arrêt et la fermeture immédiate de l'application"
+  },
+  "RPC Server Registration": {
+    "prefix": "rpc-server",
+    "body": [
+      "Server.RegisterRPC(\"${1:Catalog}\", \"${2:GetProducts}\", func(page, limit) then",
+      "\treturn [\"Produit A\", \"Produit B\"]",
+      "end)"
+    ],
+    "description": "Enregistre une méthode RPC côté serveur dans LLP"
+  },
+  "RPC Client Call": {
+    "prefix": "rpc-call",
+    "body": [
+      "General res = RPC.Call(\"${1:Catalog.GetProducts}\", ${2:1}, ${3:20})"
+    ],
+    "description": "Appel d'une méthode distante RPC avec validation matérielle transparente"
+  },
+  "RPC Event Push": {
+    "prefix": "rpc-push",
+    "body": [
+      "Server.PushTo(\"${1:deviceId}\", \"${2:orderUpdated}\", ${3:data})"
+    ],
+    "description": "Pousse un événement en temps réel vers un Device précis"
+  },
+  "UI Stack Container": {
+    "prefix": "ui-stack",
+    "body": [
+      "Stack \"${1:MainStack}\" direction: \"${2|vertical,horizontal|}\" gap: \"${3:16px}\" align: \"stretch\" {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Conteneur Stack (flex automatique vertical ou horizontal)"
+  },
+  "UI Responsive Grid": {
+    "prefix": "ui-respgrid",
+    "body": [
+      "ResponsiveGrid \"${1:MainGrid}\" columns: 12 gap: \"${2:16px}\" {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Grille responsive 12 colonnes avec spans"
+  },
+  "UI DataGrid": {
+    "prefix": "ui-datagrid",
+    "body": [
+      "DataGrid \"${1:ProductGrid}\" rpcSource: \"${2:Catalog.GetProducts}\" pageSize: ${3:25} virtualScroll: true"
+    ],
+    "description": "Tableau dynamique riche avec pagination RPC et virtual scrolling"
+  },
+  "UI Kanban": {
+    "prefix": "ui-kanban",
+    "body": [
+      "Kanban \"${1:ProjectBoard}\" rpcSource: \"${2:Tasks.GetBoard}\" onCardDrop: \"${3:Tasks.MoveCard}\""
+    ],
+    "description": "Tableau Kanban avec glisser-déposer de cartes"
+  },
+  "UI Chart": {
+    "prefix": "ui-chart",
+    "body": [
+      "Chart \"${1:SalesChart}\" type: \"${2|bar,line,pie|}\" title: \"${3:Ventes}\" rpcSource: \"${4:Analytics.GetSales}\""
+    ],
+    "description": "Graphique interactif alimenté par RPC"
+  },
+  "UI Drawer": {
+    "prefix": "ui-drawer",
+    "body": [
+      "Drawer \"${1:FilterDrawer}\" title: \"${2:Filtres}\" position: \"${3|right,left,top,bottom|}\" width: \"${4:360px}\" {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Tiroir latéral coulissant (Drawer)"
+  },
+  "UI Modal": {
+    "prefix": "ui-modal",
+    "body": [
+      "Modal \"${1:ConfirmModal}\" title: \"${2:Confirmation}\" width: \"${3:500px}\" {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Fenêtre modale avec overlay"
+  },
+  "UI Webview Escape Hatch": {
+    "prefix": "ui-webview",
+    "body": [
+      "Webview \"${1:CustomPorte}\" minHeight: \"${2:300px}\""
+    ],
+    "description": "Webview / HTML libre sandboxed (porte de sortie totale)"
+  }
+}

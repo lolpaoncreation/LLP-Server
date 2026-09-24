@@ -1,0 +1,27 @@
+visibility: All
+
+/* ===================================================
+   Librairie Standard LLP : SymLlp (Équivalent SymPy) (Lecture Seule)
+   Calcul symbolique exact, résolution d'équations et matrices
+   =================================================== *\
+
+func SolveThreshold(string equationStr, string variableName) {
+    return SymLlp.Solve(equationStr, variableName)
+}
+
+func MarginalCostDerivative(string costExpression, string variableName) {
+    return SymLlp.Derivative(costExpression, variableName)
+}
+
+func TotalRevenueIntegral(string marginalRevenueExpr, string variableName) {
+    return SymLlp.Integral(marginalRevenueExpr, variableName)
+}
+
+func SimplifyEconomicFormula(string rawFormula) {
+    return SymLlp.Simplify(rawFormula)
+}
+
+func ComputeMatrix2x2Det(General rowA, General rowB) {
+    General matrix = General{rowA, rowB}
+    return SymLlp.MatrixDet(matrix)
+}

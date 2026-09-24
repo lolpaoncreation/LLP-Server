@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  llp-server:
+    build:
+      context: ..
+      dockerfile: install/Dockerfile
+    container_name: llp-backend-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../install/server.llp:/var/www/llp-server/server.llp:ro
+      - llp-server-data:/var/www/llp-server/data
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+
+volumes:
+  llp-server-data:

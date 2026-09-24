@@ -1,0 +1,18 @@
+visibility: All
+
+/* ===================================================
+   Librairie Standard LLP : DatabaseSync (Synchronisation) (Lecture Seule)
+   Exportation, importation et réplication de bases de données
+   =================================================== *\
+
+func ExportDatabase(General dbInstance, string destinationJsonPath) {
+    return DatabaseSync.ExportJson(dbInstance, destinationJsonPath)
+}
+
+func ImportDatabase(General dbInstance, string sourceJsonPath) {
+    return DatabaseSync.ImportJson(dbInstance, sourceJsonPath)
+}
+
+func ReplicateDatabases(General sourceDb, General destinationDb) {
+    return DatabaseSync.SyncTables(sourceDb, destinationDb)
+}

@@ -1,0 +1,115 @@
+visibility: All
+
+/* ===================================================
+   Styles Tableau de Bord (.illps) - Page 2
+   =================================================== *\
+
+Background.FenetreDashboard {
+    background: #11111b
+    padding: 24px
+    responsive: true
+}
+
+Card#CarteTopBar {
+    background: #1e1e2e
+    border: 1px solid #313244
+    borderRadius: 12px
+    padding: 16px
+    marginBottom: 16px
+}
+
+Text#TitreDashboard {
+    color: #89b4fa
+    fontSize: 20px
+    font: bold
+}
+
+Button#BtnDeconnexion {
+    background: #f38ba8
+    color: #11111b
+    fontSize: 13px
+    font: bold
+    borderRadius: 6px
+    padding: 8px 16px
+}
+
+Text#InfoSession {
+    color: #a6adc8
+    fontSize: 12px
+}
+
+Card#CarteStatistiques {
+    background: #181825
+    border: 1px solid #313244
+    borderRadius: 12px
+    padding: 16px
+    marginBottom: 16px
+}
+
+Text#KpiProduits {
+    color: #a6e3a1
+    fontSize: 18px
+    font: bold
+    align: center
+}
+
+Text#KpiValeur {
+    color: #fab387
+    fontSize: 18px
+    font: bold
+    align: center
+}
+
+Text#KpiCategories {
+    color: #cba6f7
+    fontSize: 18px
+    font: bold
+    align: center
+}
+
+Card#CarteCatalogue {
+    background: #1e1e2e
+    border: 1px solid #313244
+    borderRadius: 12px
+    padding: 20px
+    marginBottom: 16px
+}
+
+Button#BtnNouveauProduit {
+    background: #a6e3a1
+    color: #11111b
+    fontSize: 14px
+    font: bold
+    borderRadius: 8px
+    padding: 10px 18px
+}
+
+Modal#ModalAjoutProduit {
+    background: #181825
+    border: 2px solid #89b4fa
+    borderRadius: 16px
+    padding: 24px
+}
+
+Text#ModalDesc {
+    color: #cdd6f4
+    fontSize: 14px
+    marginBottom: 14px
+}
+
+Button#BtnValiderAjout {
+    background: #89b4fa
+    color: #11111b
+    fontSize: 14px
+    font: bold
+    borderRadius: 8px
+    padding: 10px 20px
+}
+
+Button#BtnFermerModal {
+    background: #45475a
+    color: #cdd6f4
+    fontSize: 14px
+    borderRadius: 8px
+    padding: 10px 20px
+}

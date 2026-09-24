@@ -1,0 +1,148 @@
+// ===================================================
+// Example 2: Hierarchical Parent-Child Application (LLP)
+// Demonstration: 
+// 1. Service & Instance Parent-Child Hierarchy Tree
+// 2. Page Navigation (button click to navigate to another page)
+// 3. Displaying a Page on Top of a Page (Modal / Nested Subpage Overlay)
+// ===================================================
+
+print("===================================================")
+print("   Hierarchical Application & UI Navigation (LLP)")
+print("===================================================")
+
+// ---------------------------------------------------
+// PART 1: System Services Architecture
+// ---------------------------------------------------
+General systeme = Instance.new("AppSystem")
+systeme.Name = "LolpaonOS"
+
+General servicesFolder = Instance.new("Folder", systeme)
+servicesFolder.Name = "Services"
+
+General authService = Instance.new("AuthService", servicesFolder)
+authService.Name = "Auth"
+
+General storageService = Instance.new("StorageService", servicesFolder)
+storageService.Name = "Storage"
+
+print("\n[Registered System Services]")
+for s in servicesFolder.GetChildren() {
+    print(" - Service:", s.Name, "| Class:", s.ClassName)
+}
+
+// ---------------------------------------------------
+// PART 2: User Interface & Multi-Page Setup
+// ---------------------------------------------------
+print("\n[User Interface Architecture]")
+
+// Root window of the application
+General fenetreApp = Instance.new("Window", systeme)
+fenetreApp.Name = "MainWindow"
+fenetreApp.Title = "Lolpaon Application Manager"
+fenetreApp.CurrentPage = "LoginPage"
+
+// PAGE 1: Login Page
+General pageConnexion = Instance.new("Page", fenetreApp)
+pageConnexion.Name = "LoginPage"
+pageConnexion.Title = "User Login"
+pageConnexion.IsVisible = true
+
+General champLogin = Instance.new("TextInput", pageConnexion)
+champLogin.Name = "UsernameInput"
+champLogin.Placeholder = "Username"
+
+General champPassword = Instance.new("TextInput", pageConnexion)
+champPassword.Name = "PasswordInput"
+champPassword.Placeholder = "Password"
+
+General btnConnexion = Instance.new("Button", pageConnexion)
+btnConnexion.Name = "BtnLogin"
+btnConnexion.Text = "Sign In"
+btnConnexion.TargetPage = "CatalogPage"
+
+// PAGE 2: Product Catalog Page
+General pageCatalogue = Instance.new("Page", fenetreApp)
+pageCatalogue.Name = "CatalogPage"
+pageCatalogue.Title = "Product Catalog & Inventory"
+pageCatalogue.IsVisible = false
+
+General btnDeconnexion = Instance.new("Button", pageCatalogue)
+btnDeconnexion.Name = "BtnLogout"
+btnDeconnexion.Text = "⮌ Sign Out"
+btnDeconnexion.TargetPage = "LoginPage"
+
+General btnOuvrirModal = Instance.new("Button", pageCatalogue)
+btnOuvrirModal.Name = "BtnAddProduct"
+btnOuvrirModal.Text = "➕ Add Product (Open Page on Page)"
+
+// PAGE ON PAGE: Modal Window (Nested child page of CatalogPage)
+General modalAjoutProduit = Instance.new("ModalPage", pageCatalogue)
+modalAjoutProduit.Name = "ModalAddProduct"
+modalAjoutProduit.Title = "New Product (Page on Page)"
+modalAjoutProduit.IsVisible = false // Hidden by default
+
+General modalChampNom = Instance.new("TextInput", modalAjoutProduit)
+modalChampNom.Name = "ModalProductName"
+modalChampNom.Placeholder = "New product name"
+
+General modalBtnValider = Instance.new("Button", modalAjoutProduit)
+modalBtnValider.Name = "BtnSubmitProduct"
+modalBtnValider.Text = "Save Product"
+
+General modalBtnFermer = Instance.new("Button", modalAjoutProduit)
+modalBtnFermer.Name = "BtnCloseModal"
+modalBtnFermer.Text = "✕ Close"
+
+print("✓ UI hierarchy initialized successfully.")
+print("  - Initial active page:", fenetreApp.CurrentPage)
+print("  - Elements on", pageConnexion.Name, ":")
+for el in pageConnexion.GetChildren() {
+    print("    * [", el.ClassName, "]", el.Name)
+}
+
+// ---------------------------------------------------
+// PART 3: User Interaction Simulation
+// ---------------------------------------------------
+print("\n[Simulation: Navigation & Page on Page Overlay]")
+
+// 1. Click login button to navigate to another page
+print("\n>>> Event: User clicks '", btnConnexion.Text, "' (", btnConnexion.Name, ")")
+print("    Detected action: Navigate to target page:", btnConnexion.TargetPage)
+
+pageConnexion.IsVisible = false
+pageCatalogue.IsVisible = true
+fenetreApp.CurrentPage = btnConnexion.TargetPage
+
+print("    ✓ Current page:", fenetreApp.CurrentPage)
+print("    ✓ Visibility LoginPage:", pageConnexion.IsVisible)
+print("    ✓ Visibility CatalogPage:", pageCatalogue.IsVisible)
+
+// 2. Click button to open page on page (Modal)
+print("\n>>> Event: User clicks '", btnOuvrirModal.Text, "'")
+print("    Detected action: Display sub-page (Page on Page):", modalAjoutProduit.Name)
+
+modalAjoutProduit.IsVisible = true
+print("    ✓ The page on page is now displayed above '", pageCatalogue.Name, "'!")
+print("    ✓ Page on page title:", modalAjoutProduit.Title)
+print("    ✓ Modal visibility status:", modalAjoutProduit.IsVisible)
+print("    ✓ Modal children:")
+for mEl in modalAjoutProduit.GetChildren() {
+    print("      - [", mEl.ClassName, "]", mEl.Name, "(Text/Placeholder:", mEl.Placeholder, ")")
+}
+
+// 3. Close the page on page
+print("\n>>> Event: User clicks '", modalBtnFermer.Text, "'")
+modalAjoutProduit.IsVisible = false
+print("    ✓ The page on page was closed. Back to '", pageCatalogue.Name, "'.")
+print("    ✓ Modal visibility status:", modalAjoutProduit.IsVisible)
+
+// 4. Return to home page via logout button
+print("\n>>> Event: User clicks '", btnDeconnexion.Text, "'")
+pageCatalogue.IsVisible = false
+pageConnexion.IsVisible = true
+fenetreApp.CurrentPage = btnDeconnexion.TargetPage
+print("    ✓ Navigated back to:", fenetreApp.CurrentPage)
+
+print("\n===================================================")
+print("   Parent-Child & Navigation Demo Completed!")
+print("===================================================")

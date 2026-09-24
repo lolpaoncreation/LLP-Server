@@ -1,0 +1,50 @@
+visibility: All
+
+/* ===================================================
+   Interface Lolpaon (.illp) : Déclaration Visuelle WYSIWYG
+   Exemple Complet avec Conteneurs & Sous-Conteneurs Imbriqués
+   Composants : Card, Grid, Row, Text, TextInput, Button, Checkbox, ProgressBar, ListButton, ItemBox, Image, Divider
+   Le responsive est activé via la propriété responsive: true
+   =================================================== *\
+
+Background "FenetrePrincipale" responsive: true minWidth: "380px" maxWidth: "900px" minHeight: "560px" {
+    Card "CarteEnTete" title: "Espace de Travail - Lolpaon Studio" {
+        Row "LigneBranding" {
+            Image "LogoApp" src: "assets/logo.png"
+            Text "TitrePrincipal" content: "Lolpaon Studio Pro"
+        }
+
+        Row "LigneProgression" {
+            Text "LabelStatut" content: "Initialisation du système..."
+            ProgressBar "BarreProgression" value: 85 max: 100
+        }
+
+        Row "LigneSeparateur" {
+            Divider "SeparateurEnTete"
+        }
+    }
+
+    Card "CarteFormulaire" title: "Configuration du Profil & Paramètres" {
+        Grid "GrilleIdentifiants" columns: 2 {
+            TextInput "InputIdentifiant" placeholder: "Entrez votre identifiant..."
+            TextInput "InputMotDePasse" placeholder: "Entrez votre mot de passe..."
+        }
+
+        Grid "GrilleOptions" columns: 2 {
+            ListButton "ChoixRole" choices: ["Administrateur", "Développeur", "Invité"]
+            ItemBox "SelecteurTheme" default: "Thème Sombre" items: ["Thème Sombre", "Thème Clair", "Thème Cyberpunk"]
+        }
+
+        Row "LignePreferences" {
+            Checkbox "CheckRemember" label: "Se souvenir de moi" checked: true
+            Checkbox "CheckSSL" label: "Connexion sécurisée SSL" checked: true
+        }
+    }
+
+    Card "CarteActions" title: "Actions & Validation" {
+        Row "LigneBoutons" {
+            Button "BtnConnexion" text: "Se Connecter"
+            Button "BtnAnnuler" text: "Réinitialiser"
+        }
+    }
+}

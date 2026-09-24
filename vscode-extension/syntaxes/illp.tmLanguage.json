@@ -1,0 +1,120 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Interface LLP",
+  "scopeName": "source.illp",
+  "patterns": [
+    { "include": "#visibility_header" },
+    { "include": "#comments" },
+    { "include": "#components" },
+    { "include": "#properties" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#booleans" },
+    { "include": "#arrays" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "visibility_header": {
+      "patterns": [
+        {
+          "match": "\\b(visibility)\\s*:\\s*(All|Package|Parent|Private)\\b",
+          "captures": {
+            "1": { "name": "keyword.control.directive.illp" },
+            "2": { "name": "entity.name.type.visibility.illp" }
+          }
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "begin": "/\\*",
+          "end": "(\\*\\\\|\\*/)",
+          "name": "comment.block.illp"
+        },
+        {
+          "begin": "//",
+          "end": "$",
+          "name": "comment.line.double-slash.illp"
+        },
+        {
+          "begin": "/-",
+          "end": "(\\\\|(?=$))",
+          "name": "comment.line.custom.illp"
+        }
+      ]
+    },
+    "components": {
+      "patterns": [
+        {
+          "match": "\\b(Background|Grid|Row|Card|Stack|ResponsiveGrid|Drawer|Modal|DataGrid|Kanban|TreeView|TagPicker|DatePicker|DateRangePicker|RichEditor|FileUpload|ColorPicker|Chart|Skeleton|Toast|MediaPlayer|Webview|CustomHtml|TextInput|Text|Button|Checkbox|ProgressBar|Divider|ListButton|ItemBox|Image)\\b",
+          "name": "entity.name.class.illp"
+        }
+      ]
+    },
+    "properties": {
+      "patterns": [
+        {
+          "match": "\\b(responsive|columns|title|text|content|placeholder|label|checked|value|max|src|choices|default|items|direction|gap|align|position|width|minWidth|maxWidth|minHeight|maxHeight|rpcSource|pageSize|virtualScroll|onCardDrop|onSelect|rpcSearch|debounce|mode|defaultRange|onChange|rpcUpload|maxSize|accept|defaultColor|type|lines|message|mediaType|colSpanDesktop|colSpanMobile|anchor)\\s*(?=:)",
+          "name": "entity.other.attribute-name.illp"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.illp",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.illp",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.illp",
+          "match": "\\b[0-9]+(\\.[0-9]+)?(px|%|em|rem|vw|vh|s|ms|MB|KB|GB)?\\b"
+        }
+      ]
+    },
+    "booleans": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.illp",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+    "arrays": {
+      "begin": "\\[",
+      "end": "\\]",
+      "patterns": [
+        { "include": "#strings" },
+        { "include": "#numbers" },
+        { "include": "#booleans" }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.colon.illp",
+          "match": ":"
+        },
+        {
+          "name": "punctuation.separator.comma.illp",
+          "match": ","
+        },
+        {
+          "name": "punctuation.section.block.illp",
+          "match": "[{}]"
+        }
+      ]
+    }
+  }
+}

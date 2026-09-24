@@ -1,0 +1,74 @@
+// ===================================================
+// Complete Demonstration of the LLP Language (lolpaon)
+// ===================================================
+
+print("=== 1. TYPING AND VARIABLES ===")
+General applicationName = "LLP Studio Application"  // General: dynamic typing
+string author = "lolpaon"                            // Explicit string typing
+int version = 1                                       // Explicit int typing
+bool isConnected = true                              // Explicit bool typing
+
+print("Application:", applicationName)
+print("Author:", author, "| Version:", version, "| Connected:", isConnected)
+
+print("\n=== 2. RESIZABLE LISTS AND FIXED-SIZE ARRAYS ===")
+// Resizable dynamic list
+General myServices = General{"Database", "FileManager", "Network"}
+myServices.Add("UserInterface")
+print("Services list size (General{}):", myServices.Length())
+print("Services list:", myServices)
+
+// Fixed-size array (Max 3 elements)
+General memorySlots = General[3]{"ModuleA", "ModuleB", "ModuleC"}
+print("Fixed array (General[3]):", memorySlots)
+print("Maximum capacity:", memorySlots.MaxLength())
+// Important initialization inside comment { Global secretToken = 999 } end of note \
+print("Active token:", secretToken) // Outputs 999
+print("\n=== 3. PARENT-CHILD ARCHITECTURE (Roblox Instance Tree) ===")
+// Tree hierarchy creation
+General appRoot = Instance.new("Folder")
+appRoot.Name = "LolpaonApplication"
+
+General configService = Instance.new("FileService", appRoot)
+configService.Name = "ConfigurationService"
+
+General dbService = Instance.new("DatabaseService", appRoot)
+dbService.Name = "DataService"
+
+General childDbNode = Instance.new("TableNode", dbService)
+childDbNode.Name = "UsersTable"
+
+print("Root Name:", appRoot.Name)
+print("Direct children count in appRoot:", appRoot.GetChildren().Length())
+
+// Search with FindFirstChild
+General foundService = appRoot.FindFirstChild("DataService")
+print("Service found via FindFirstChild:", foundService.Name)
+print("Child of found service:", foundService.FindFirstChild("UsersTable").Name)
+
+print("\n=== 4. FILE MANAGEMENT (File & Directory) ===")
+File.Write("app_config.txt", "theme=dark\nlanguage=en\nauto_save=true")
+print("File app_config.txt exists?", File.Exists("app_config.txt"))
+
+General configContent = File.Read("app_config.txt")
+print("Config file content:\n" + configContent)
+
+print("\n=== 5. DATABASE MANAGEMENT (Database) ===")
+General db = Database.Open("demo_app.db")
+
+// Fast Key-Value storage
+db.Set("user_active", "lolpaon_master")
+db.Set("max_connections", 100)
+print("Active user in DB:", db.Get("user_active"))
+
+// Structured SQL queries for tables
+db.Execute("CREATE TABLE users")
+db.Execute("INSERT INTO users", General{1, "lolpaon", "Admin"})
+db.Execute("INSERT INTO users", General{2, "guest", "User"})
+
+General dbUsers = db.Query("SELECT * FROM users")
+print("Registered users list in DB:", dbUsers)
+
+print("\n===================================================")
+print("LLP Demonstration completed successfully!")
+print("===================================================")

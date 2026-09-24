@@ -1,0 +1,62 @@
+visibility: All
+
+/* ===================================================
+   Dashboard Interface (.illp) - Page 2
+   Product Management Application - Lolpaon Pro
+   Multi-page navigation & Page on Page Overlay (Modal)
+   =================================================== *\
+
+Background "DashboardWindow" responsive: true minWidth: "480px" maxWidth: "1050px" minHeight: "680px" {
+    Card "TopBarCard" title: "Lolpaon Store Pro - Dashboard" {
+        Row "TopBarRow" {
+            Text "DashboardTitle" content: "📦 Product & Inventory Manager"
+            Button "BtnLogout" text: "⮌ Sign Out" targetPage: "login.illp"
+        }
+        Row "SessionRow" {
+            Text "SessionInfo" content: "Active session (.cllpdb connected via UTF-8)"
+            ProgressBar "SessionBar" value: 90 max: 100
+        }
+    }
+
+    Card "StatsCard" title: "Catalog Key Indicators" {
+        Grid "KpiGrid" columns: 3 {
+            Text "KpiProducts" content: "6 Active Products"
+            Text "KpiValue" content: "$2,277.29 in Stock"
+            Text "KpiCategories" content: "3 Managed Categories"
+        }
+    }
+
+    Card "CatalogCard" title: "Available Products Catalog" {
+        Row "CatalogActionsRow" {
+            Text "CatalogSubtitle" content: "Data synchronized with products.cllpdb"
+            Button "BtnNewProduct" text: "➕ Add Product (Open Page on Page)" action: "openModal:ModalAddProduct"
+        }
+
+        Grid "ProductsGrid" columns: 2 {
+            TextInput "P1" placeholder: "💻 Pro 16 Laptop - $1299.99 (Stock: 15)"
+            TextInput "P2" placeholder: "⌨️ RGB Mechanical Keyboard - $129.50 (Stock: 42)"
+            TextInput "P3" placeholder: "🖱️ Ergonomic Wireless Mouse - $59.90 (Stock: 80)"
+            TextInput "P4" placeholder: "🎧 Noise Cancelling Headphones - $249.00 (Stock: 28)"
+            TextInput "P5" placeholder: "🖥️ 27'' Ultra-Sharp 4K Monitor - $449.00 (Stock: 19)"
+            TextInput "P6" placeholder: "🎙️ USB Studio Microphone - $89.90 (Stock: 35)"
+        }
+    }
+
+    Modal "ModalAddProduct" title: "New Product (Page on Page)" {
+        Row "ModalInfoRow" {
+            Text "ModalDesc" content: "Fill in the details below to insert into .cllpdb database:"
+        }
+
+        Grid "ModalFormGrid" columns: 2 {
+            TextInput "ModalInputName" placeholder: "Product name (e.g. 4K Webcam)..."
+            TextInput "ModalInputPrice" placeholder: "Unit price ($)..."
+            TextInput "ModalInputStock" placeholder: "Initial stock quantity..."
+            ItemBox "ModalSelectCategory" default: "Computers & PC" items: ["Computers & PC", "Peripherals", "Audio & Sound"]
+        }
+
+        Row "ModalButtonsRow" {
+            Button "BtnSubmitAdd" text: "✓ Save to .cllpdb"
+            Button "BtnCloseModal" text: "✕ Close Page" action: "closeModal"
+        }
+    }
+}

@@ -1,0 +1,21 @@
+[Unit]
+Description=LLP Dedicated Backend Server (lolpaon language)
+Documentation=https://github.com/lolpaoncreation/LLP-Server.git
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/llp-server
+ExecStart=/usr/local/bin/llp server server.llp --port 8080
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=llp-server
+Environment=NODE_ENV=production
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

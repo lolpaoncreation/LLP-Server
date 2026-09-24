@@ -1,0 +1,38 @@
+{
+  "name": "llp-lang",
+  "version": "1.0.0",
+  "description": "LLP (lolpaon programming language) - Lightweight multi-system language with Roblox-like parent-child hierarchy and easy DB/File management.",
+  "main": "dist/index.js",
+  "bin": {
+    "llp": "bin/llp.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node bin/llp.js",
+    "test": "tsc && node bin/llp.js run examples/demo.llp"
+  },
+  "keywords": [
+    "llp",
+    "lolpaon",
+    "interpreter",
+    "programming-language",
+    "roblox-hierarchy",
+    "database",
+    "filesystem"
+  ],
+  "author": "lolpaon",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.7.3"
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "type": "commonjs",
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
+  }
+}

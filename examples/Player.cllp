@@ -1,0 +1,12 @@
+visibility: All
+
+class Player then
+    string Name = "DefaultPlayer"
+    int Health = 100
+    int Score = 0
+
+    function TakeDamage(amount) then
+        Health = Health - amount
+        print("Aïe !", Name, "a subi", amount, "dégâts. Santé restante :", Health)
+    end
+end

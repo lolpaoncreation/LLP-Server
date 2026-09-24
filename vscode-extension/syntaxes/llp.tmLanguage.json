@@ -1,0 +1,269 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "LLP Language",
+  "scopeName": "source.llp",
+  "patterns": [
+    { "include": "#visibility_header" },
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#ui_elements" },
+    { "include": "#stdlib" },
+    { "include": "#instance_methods" },
+    { "include": "#functions" },
+    { "include": "#variables" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "visibility_header": {
+      "patterns": [
+        {
+          "match": "\\b(visibility)\\s*:\\s*(All|Package|Parent|Private)\\b",
+          "captures": {
+            "1": { "name": "keyword.control.directive.llp" },
+            "2": { "name": "entity.name.type.visibility.llp" }
+          }
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "comment": "Multi-line comment /* ... *\\ or /* ... */ with embedded code { ... }",
+          "begin": "/\\*",
+          "beginCaptures": {
+            "0": { "name": "comment.block.custom.llp punctuation.definition.comment.begin.llp" }
+          },
+          "end": "(\\*\\\\|\\*/)",
+          "endCaptures": {
+            "0": { "name": "comment.block.custom.llp punctuation.definition.comment.end.llp" }
+          },
+          "patterns": [
+            {
+              "comment": "Embedded code inside multi-line comment",
+              "begin": "\\{",
+              "beginCaptures": {
+                "0": { "name": "punctuation.section.embedded.begin.llp" }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": { "name": "punctuation.section.embedded.end.llp" }
+              },
+              "patterns": [
+                { "include": "$self" }
+              ]
+            },
+            {
+              "name": "comment.block.custom.llp",
+              "match": "[^{*]+|\\*(?!/|\\\\)"
+            }
+          ]
+        },
+        {
+          "comment": "Inline LLP comment /- ... \\ with embedded code { ... }",
+          "begin": "/-",
+          "beginCaptures": {
+            "0": { "name": "comment.line.custom.llp punctuation.definition.comment.begin.llp" }
+          },
+          "end": "(\\\\|(?=$))",
+          "endCaptures": {
+            "0": { "name": "comment.line.custom.llp punctuation.definition.comment.end.llp" }
+          },
+          "patterns": [
+            {
+              "comment": "Embedded executable code inside comment",
+              "begin": "\\{",
+              "beginCaptures": {
+                "0": { "name": "punctuation.section.embedded.begin.llp" }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": { "name": "punctuation.section.embedded.end.llp" }
+              },
+              "patterns": [
+                { "include": "$self" }
+              ]
+            },
+            {
+              "name": "comment.line.custom.llp",
+              "match": "[^{}\\\\]+"
+            }
+          ]
+        },
+        {
+          "comment": "Standard line comment // ... with embedded code { ... }",
+          "begin": "//",
+          "beginCaptures": {
+            "0": { "name": "comment.line.double-slash.llp punctuation.definition.comment.begin.llp" }
+          },
+          "end": "$",
+          "patterns": [
+            {
+              "comment": "Embedded code inside line comment",
+              "begin": "\\{",
+              "beginCaptures": {
+                "0": { "name": "punctuation.section.embedded.begin.llp" }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": { "name": "punctuation.section.embedded.end.llp" }
+              },
+              "patterns": [
+                { "include": "$self" }
+              ]
+            },
+            {
+              "name": "comment.line.double-slash.llp",
+              "match": "[^{]+|\\{(?!.*\\})"
+            }
+          ]
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.llp",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.llp",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.llp",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.llp",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.llp",
+          "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.logical.llp",
+          "match": "(&\\||&&|\\|\\||&|\\|)"
+        },
+        {
+          "name": "keyword.operator.comparison.llp",
+          "match": "(==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.arithmetic.llp",
+          "match": "(\\+|\\-|\\*|/|%)"
+        },
+        {
+          "name": "keyword.operator.assignment.llp",
+          "match": "="
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.llp",
+          "match": "\\b(if|then|else|end|do|while|for|in|return|and|or|xor)\\b"
+        },
+        {
+          "name": "keyword.other.llp",
+          "match": "\\b(func|new)\\b"
+        },
+        {
+          "name": "constant.language.llp",
+          "match": "\\b(true|false|null)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.llp",
+          "match": "\\b(General|Global|App|int|float|string|bool)\\b"
+        },
+        {
+          "name": "storage.type.array.llp",
+          "match": "\\b(General|Global|App|int|float|string|bool)\\[[0-9]+\\]"
+        }
+      ]
+    },
+    "ui_elements": {
+      "patterns": [
+        {
+          "name": "entity.name.class.ui.llp",
+          "match": "\\b(TextInput|Text|ListButton|Button|ItemBox|Image|Background|Grid|Row|Card|Checkbox|ProgressBar|Divider|Stack|ResponsiveGrid|Drawer|Modal|DataGrid|Kanban|TreeView|TagPicker|DatePicker|DateRangePicker|RichEditor|FileUpload|ColorPicker|Chart|Skeleton|Toast|MediaPlayer|Webview|CustomHtml)\\b"
+        }
+      ]
+    },
+    "stdlib": {
+      "patterns": [
+        {
+          "name": "support.class.llp",
+          "match": "\\b(Instance|Database|File|Directory|System|SciLlp|SymLlp|ProbLlp|Cllpdb|Math|PY|PI|RPC|Network|Client|Server|Device)\\b"
+        },
+        {
+          "name": "support.function.llp",
+          "match": "\\b(print|input)\\b"
+        }
+      ]
+    },
+    "instance_methods": {
+      "patterns": [
+        {
+          "name": "entity.name.function.member.llp",
+          "match": "\\b(Launch|Lock|Silence|Close|Run|FindFirstChild|GetChildren|SetProperty|Add|Remove|Length|MaxLength|Open|Execute|Query|Set|Get|Read|Write|Exists|Delete)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.llp",
+          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*\\()"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.llp",
+          "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.block.llp",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.separator.delimiter.llp",
+          "match": "[,;:]"
+        },
+        {
+          "name": "punctuation.section.brackets.llp",
+          "match": "[\\[\\]()]"
+        }
+      ]
+    }
+  }
+}

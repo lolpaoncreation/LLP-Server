@@ -1,0 +1,34 @@
+visibility: All
+
+/* ===================================================
+   Librairie Standard LLP : SciLlp (Équivalent SciPy) (Lecture Seule)
+   Calculs scientifiques, statistiques et traitement du signal
+   =================================================== *\
+
+func CalculateAverageCart(General priceList) {
+    return SciLlp.Mean(priceList)
+}
+
+func CalculatePriceVariance(General priceList) {
+    return SciLlp.Variance(priceList)
+}
+
+func CalculatePriceStdDev(General priceList) {
+    return SciLlp.StdDev(priceList)
+}
+
+func SmoothSalesTrend(General salesSignal, int windowSize) {
+    return SciLlp.MovingAverage(salesSignal, windowSize)
+}
+
+func FilterSalesNoise(General salesSignal, float threshold) {
+    return SciLlp.SignalFilter(salesSignal, threshold)
+}
+
+func DetectSalesPeaks(General salesSignal) {
+    return SciLlp.PeakDetect(salesSignal)
+}
+
+func ForecastLinearTrend(General xDays, General ySales) {
+    return SciLlp.LinearRegression(xDays, ySales)
+}

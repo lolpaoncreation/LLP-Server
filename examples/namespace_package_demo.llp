@@ -1,0 +1,37 @@
+visibility: All
+
+/* ===============================================================
+   Démonstration LLP : Packages de classes avec namespace then ... end
+   =============================================================== *\
+
+namespace GameEngine then
+    /- Variables globales au package / partagées entre les classes \
+    int MaxEntities = 5000
+    string EngineVersion = "3.2.0"
+
+    /- Classe déclarée au sein du package \
+    class PhysicsWorld then
+        int Gravity = -10
+        string Name = "PhysiqueMoteur"
+    end
+
+    class AudioManager then
+        int MasterVolume = 100
+        string Name = "AudioMoteur"
+    end
+end
+
+print("=== ACCÈS AUX VARIABLES DU NAMESPACE ===")
+print("Version du moteur :", GameEngine.EngineVersion)
+print("Entités maximales autorisées :", GameEngine.MaxEntities)
+
+print("\n=== INSTANCIATION DES CLASSES DU NAMESPACE ===")
+General root = Instance.new("RacineMoteur")
+
+General physics = GameEngine.PhysicsWorld.new(root)
+print("Instance PhysicsWorld :", physics)
+print("Gravité configurée :", physics.Gravity)
+
+General audio = GameEngine.AudioManager.new(root)
+print("Instance AudioManager :", audio)
+print("Volume maître :", audio.MasterVolume)

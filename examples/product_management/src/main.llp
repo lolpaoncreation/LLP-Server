@@ -1,0 +1,92 @@
+// ===================================================
+// Complete Application: Product Management (LLP)
+// Demonstration: .cllpdb Authentication, Navigation, Math/PY, Validation,
+// and advanced scientific calculations (SciLlp, SymLlp, ProbLlp)
+// ===================================================
+
+print("===================================================")
+print("   Product Management Application - Lolpaon Pro")
+print("===================================================")
+
+// 1. Universal Constant PY and Unique Project Encryption Key
+print("\n[1. Global Libraries & Configuration]")
+print("Universal PY constant:", PY)
+print("Unique project encryption key:", Crypto.GetProjectKey())
+
+// 2. Connect to Encrypted Database (.cllpdb)
+print("\n[2. Encrypted Database Connection (.cllpdb)]")
+General db = CLLPDB.Open("data/products.cllpdb")
+
+// Authentication & 2-minute active session
+bool isConnected = db.StartSession("admin", "admin123")
+print("Authentication successful?", isConnected)
+print("Remaining session time (seconds):", db.GetRemainingSession())
+
+if (isConnected) {
+    // 3. Browse Product Catalog
+    print("\n[3. Inspect Tables & Products (Simplified UTF-8 MySQL)]")
+    General userList = db.Query("SELECT * FROM users")
+    print("Registered users:", userList)
+
+    General categoryList = db.Query("SELECT * FROM categories")
+    print("Available categories:", categoryList)
+
+    General productList = db.Query("SELECT * FROM products")
+    print("Product catalog:", productList)
+
+    // 4. Mathematical Calculations with PY (Circular price badge design)
+    print("\n[4. Display Calculations with Math & PY]")
+    float badgeRadius = 25.0
+    float badgeArea = PY * Math.Pow(badgeRadius, 2)
+    print("Promotion badge radius (px):", badgeRadius)
+    print("Calculated circular badge area (Math.Pow + PY):", Math.Round(badgeArea), "px²")
+
+    // 5. Validation and Adding a New Product
+    print("\n[5. Form Validation & Product Creation]")
+    string newName = "USB Podcast Studio Microphone"
+    float newPrice = 89.90
+    int newStock = 35
+
+    bool nameValid = UIValidator.ValidateRequired(newName)
+    bool priceValid = UIValidator.ValidateNumber(newPrice)
+
+    if (nameValid && priceValid) {
+        db.Execute("INSERT INTO products VALUES (106, \"USB Podcast Studio Microphone\", 89.90, 35, 3);")
+        UIValidator.ShowSuccess("New product added to catalog successfully!")
+    } else {
+        UIValidator.ShowError("Form", "The provided inputs are invalid.")
+    }
+
+    // 6. Scientific & Statistical Calculations (SciLlp - SciPy equivalent)
+    print("\n[6. Statistics and Sales Analysis (SciLlp)]")
+    General cartPrices = General{1299.99, 129.50, 59.90, 249.00, 449.00, 89.90}
+    print("Average cart value (SciLlp.Mean):", Math.Round(SciLlp.Mean(cartPrices)), "$")
+    print("Price standard deviation (SciLlp.StdDev):", Math.Round(SciLlp.StdDev(cartPrices)), "$")
+    
+    General salesSignal = General{10.0, 15.0, 14.0, 25.0, 30.0, 28.0, 40.0}
+    print("Sales trend smoothing (SciLlp.MovingAverage):", SciLlp.MovingAverage(salesSignal, 3))
+
+    // 7. Symbolic Mathematics (SymLlp - SymPy equivalent)
+    print("\n[7. Economic Modeling & Symbolic Math (SymLlp)]")
+    print("Symbolic derivative of cost C(x) = 3*x^2 + 5*x - 2:", SymLlp.Derivative("3*x^2 + 5*x - 2", "x"))
+    print("Symbolic integral of revenue R(x) = 3*x^2 + 2*x:", SymLlp.Integral("3*x^2 + 2*x", "x"))
+    print("Break-even threshold solution for 2*x + 4 = 100:", SymLlp.Solve("2*x + 4 = 100", "x"))
+    
+    General row1 = General{"x", "y"}
+    General row2 = General{"2", "x"}
+    General mat = General{row1, row2}
+    print("Symbolic matrix determinant (x, y):", SymLlp.MatrixDet(mat))
+
+    // 8. Stock Out Forecasts & Probabilities (ProbLlp)
+    print("\n[8. Demand Probabilities & Inventory (ProbLlp)]")
+    print("Possible 3-product bundle combinations out of 6:", ProbLlp.Combinations(6, 3))
+    print("Probability of selling exactly 4 units (Poisson lambda=3.5):", Math.Round(ProbLlp.Poisson(4, 3.5) * 100), "%")
+}
+
+print("\n===================================================")
+print("Product Management Application - Launching GUI!")
+print("===================================================")
+// Lancement de l'interface graphique Lolpaon Pro
+// Possibilités : App.Launch(), App.Launch(WindowSize: 1200 : 860), App.Launch(DevMode: True), App.Lock()
+App.Launch(DevMode: True)
+

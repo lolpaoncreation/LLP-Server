@@ -1,0 +1,78 @@
+visibility: All
+
+print("=================================================================")
+print("     LLP Transparent Hardware-Bound Real-Time RPC Engine Demo    ")
+print("=================================================================")
+
+// 1. Hardware Anchor & Identity Inspection
+General devId = RPC.GetDeviceId()
+print("[RPC Device] Hardware-bound device ID:", devId)
+print("[RPC Device] Platform:", Device.GetPlatform())
+print("[RPC Device] Hardware token active:", Device.IsTrusted())
+
+// 2. Define Named RPC Handlers
+func handleGetStats() {
+    return "{\"status\": \"online\", \"totalItems\": 1542, \"warehouse\": \"Primary North\", \"temperature\": 19.5}"
+}
+
+func handleGetProducts(category, limit) {
+    print("[RPC Handler] Catalog.getProducts called with category:", category, "limit:", limit)
+    General items = {
+        "Serveur Industriel Rack 2U (1499.99 EUR) - Stock: 14",
+        "Switch Managé 24 Ports PoE+ (429.50 EUR) - Stock: 38",
+        "Onduleur Sinusoïdal 3000VA (890.00 EUR) - Stock: 7"
+    }
+    return items
+}
+
+func handleCreateOrder(productId, quantity) {
+    print("[RPC Handler] Orders.createOrder for:", productId, "qty:", quantity)
+    General orderId = "ORD-98421"
+    // Push real-time event to the ordering device
+    Server.PushTo(devId, "OrderConfirmed", "{\"orderId\": \"" + orderId + "\", \"status\": \"Processing\", \"qty\": " + quantity + "}")
+    return "{\"orderId\": \"" + orderId + "\", \"success\": true}"
+}
+
+// 3. Register RPC Services on the Server
+print("\n[RPC Server] Registering services...")
+Server.RegisterRPC("Inventory", "getStats", handleGetStats)
+Server.RegisterRPC("Catalog", "getProducts", handleGetProducts)
+Server.RegisterRPC("Orders", "createOrder", handleCreateOrder)
+print("[RPC Server] Services 'Inventory', 'Catalog', and 'Orders' registered successfully.")
+
+// 4. Client calls RPC transparently with automatic Device Token & Argument conversion
+print("\n[RPC Client] Executing transparent RPC calls...")
+
+General stats = RPC.Call("Inventory.getStats")
+print("[RPC Client] Inventory stats result:", stats)
+
+General catalog = RPC.Call("Catalog.getProducts", "Hardware", 3)
+print("[RPC Client] Catalog products result (count:", catalog.Length(), "):")
+for item in catalog then
+    print("  ->", item)
+end
+
+General newOrder = RPC.Call("Orders.createOrder", "PROD-001", 2)
+print("[RPC Client] Order creation result:", newOrder)
+
+// 5. Poll incoming Real-Time Push Events
+print("\n[RPC Client] Polling for server-pushed events...")
+General events = RPC.PollEvents()
+print("[RPC Client] Received pushed events count:", events.Length())
+for ev in events then
+    print("  [Event Received]:", ev.event, "Payload:", ev.payload)
+end
+
+// 6. Broadcast Event Showcase
+print("\n[RPC Server] Broadcasting alert event to all devices...")
+Server.Broadcast("SystemMaintenance", "{\"plannedAt\": \"02:00 UTC\", \"durationMinutes\": 15}")
+
+General broadcastEvents = RPC.PollEvents()
+print("[RPC Client] Post-broadcast events received count:", broadcastEvents.Length())
+for ev in broadcastEvents then
+    print("  [Broadcast Received]:", ev.event, "Payload:", ev.payload)
+end
+
+print("\n=================================================================")
+print(" [SUCCESS] Transparent Real-Time RPC Subsystem fully operational! ")
+print("=================================================================")
