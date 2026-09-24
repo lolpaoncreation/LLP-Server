@@ -1,7 +1,7 @@
 visibility: All
 
 /* ===============================================================
-   Démonstration LLP : Classes, Arborescence Parent-Enfant & ToString()
+   LLP Demonstration: Classes, Parent-Child Hierarchy & ToString()
    =============================================================== *\
 
 class Hero then
@@ -9,21 +9,21 @@ class Hero then
     int Level = 1
 end
 
-/- 1. Création de l'arborescence \
+/- 1. Tree hierarchy creation \
 General gameRoot = Instance.new("Game")
-gameRoot.Name = "MonJeu"
+gameRoot.Name = "MyGame"
 
 General world = Instance.new("World", gameRoot)
-world.Name = "RoyaumeDuNord"
+world.Name = "NorthernKingdom"
 
 General player = Hero.new(world)
-player.Name = "RoiArthur"
+player.Name = "KingArthur"
 
-/- 2. Affichage par défaut de l'objet : ToString() hiérarchique automatique \
-print("Affichage via print :", player)
-print("Affichage via player.ToString() :", player.ToString())
+/- 2. Default object string representation: automatic hierarchical ToString() \
+print("Output via print:", player)
+print("Output via player.ToString():", player.ToString())
 
-/- 3. Un objet sans parent affiche simplement son nom \
+/- 3. An object without a parent simply displays its name \
 General solo = Hero.new()
-solo.Name = "GuerrierSolitaire"
-print("Objet sans parent :", solo)
+solo.Name = "LoneWarrior"
+print("Object without parent:", solo)

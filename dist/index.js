@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProjectInfo = exports.createProjectStructure = exports.getUiBuilderHtml = exports.startUiBuilderServer = exports.startGuiApplication = exports.formatDiagnosticReport = exports.analyzeSource = void 0;
+exports.cleanNonDllFilesFromLib = exports.enforceLibDirectoryProtection = exports.addLibraryToProject = exports.setFileReadOnly = exports.buildLlpDllBinary = exports.getProjectInfo = exports.createProjectStructure = exports.getUiBuilderHtml = exports.startUiBuilderServer = exports.startGuiApplication = exports.formatDiagnosticReport = exports.analyzeSource = void 0;
 exports.createGlobalEnvironment = createGlobalEnvironment;
 exports.executeLLP = executeLLP;
 exports.runFile = runFile;
@@ -62,6 +62,8 @@ const probllp_1 = require("./stdlib/probllp");
 const gui_app_1 = require("./stdlib/gui_app");
 const session_1 = require("./stdlib/session");
 const device_1 = require("./stdlib/device");
+const osi_1 = require("./stdlib/osi");
+const phone_1 = require("./stdlib/phone");
 function createGlobalEnvironment() {
     const env = new environment_1.Environment();
     // Register Standard Library
@@ -82,6 +84,8 @@ function createGlobalEnvironment() {
     (0, gui_app_1.registerGuiApp)(env);
     (0, session_1.registerSession)(env);
     (0, device_1.registerDevice)(env);
+    (0, osi_1.registerOSI)(env);
+    (0, phone_1.registerPhone)(env);
     return env;
 }
 const analyzer_1 = require("./diagnostics/analyzer");
@@ -155,3 +159,8 @@ Object.defineProperty(exports, "getUiBuilderHtml", { enumerable: true, get: func
 var scaffold_1 = require("./project/scaffold");
 Object.defineProperty(exports, "createProjectStructure", { enumerable: true, get: function () { return scaffold_1.createProjectStructure; } });
 Object.defineProperty(exports, "getProjectInfo", { enumerable: true, get: function () { return scaffold_1.getProjectInfo; } });
+Object.defineProperty(exports, "buildLlpDllBinary", { enumerable: true, get: function () { return scaffold_1.buildLlpDllBinary; } });
+Object.defineProperty(exports, "setFileReadOnly", { enumerable: true, get: function () { return scaffold_1.setFileReadOnly; } });
+Object.defineProperty(exports, "addLibraryToProject", { enumerable: true, get: function () { return scaffold_1.addLibraryToProject; } });
+Object.defineProperty(exports, "enforceLibDirectoryProtection", { enumerable: true, get: function () { return scaffold_1.enforceLibDirectoryProtection; } });
+Object.defineProperty(exports, "cleanNonDllFilesFromLib", { enumerable: true, get: function () { return scaffold_1.cleanNonDllFilesFromLib; } });

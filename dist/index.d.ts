@@ -9,4 +9,4 @@ export declare function runFile(filePath: string, options?: {
 }): void;
 export { startGuiApplication } from "./gui/app_runner";
 export { startUiBuilderServer, getUiBuilderHtml } from "./gui/ui_builder";
-export { createProjectStructure, getProjectInfo, ProjectArchitecture, CreateProjectOptions } from "./project/scaffold";
+export { createProjectStructure, getProjectInfo, ProjectArchitecture, CreateProjectOptions, buildLlpDllBinary, setFileReadOnly, addLibraryToProject, enforceLibDirectoryProtection, cleanNonDllFilesFromLib } from "./project/scaffold";

@@ -4,6 +4,7 @@ export interface UiBuilderOptions {
     port?: number;
     openBrowser?: boolean;
 }
+export declare function convertIllpsToCss(illps: string): string;
 export declare function getUiBuilderHtml(options: {
     fileName: string;
     illpContent: string;

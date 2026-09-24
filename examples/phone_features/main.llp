@@ -1,0 +1,149 @@
+// ============================================================================
+// LLP OFFICIAL LIBRARY: PHONE & MOBILE HARDWARE (iOS & Android)
+// ============================================================================
+// Complete demonstration:
+// 1. Telephony event listeners (Incoming call, Answer, Hangup)
+// 2. Audio In/Out routing (Microphone, Speaker, Bluetooth, Audio Recording)
+// 3. Camera, Flash, Battery, GPS, Haptic Vibration
+// 4. Process streaming I/O monitoring and injection (ProcessIO)
+// ============================================================================
+
+print("============================================================================")
+print("   Demonstration: Phone Library & Mobile Features (iOS / Android)")
+print("============================================================================")
+
+// ----------------------------------------------------------------------------
+// 1. TELEPHONY EVENT LISTENERS (ListenerEvent)
+// ----------------------------------------------------------------------------
+print("\n[1. Telephony Event Listeners (ListenerEvent)]")
+
+// Registering event handlers
+func handleIncomingCall(call) {
+    print("🔔 [EVENT] Incoming phone call detected!")
+    print("   -> Phone number :", call.phoneNumber)
+    print("   -> Caller name  :", call.contactName)
+}
+Phone.OnIncomingCall(handleIncomingCall)
+
+func handleCallAnswered(call) {
+    print("📞 [EVENT] Call answered successfully! Communication channel active.")
+}
+Phone.OnCallAnswered(handleCallAnswered)
+
+func handleCallEnded(call) {
+    print("📵 [EVENT] Call ended / hung up.")
+}
+Phone.OnCallEnded(handleCallEnded)
+
+func handleCallStateChanged(stateData) {
+    print("ℹ️  [TELEPHONY STATUS] New call state:", stateData.state)
+}
+Phone.OnCallStateChanged(handleCallStateChanged)
+
+// Simulation test of a complete incoming call cycle
+print("\n--- Simulation: Incoming Call Lifecycle ---")
+Phone.SimulateIncomingCall("+1-555-019-2834", "Alice Martin")
+print("Current telephony state:", Phone.GetCallState())
+
+// Answer the call
+print("\nAction: Answering incoming call...")
+Phone.Answer()
+print("Current telephony state:", Phone.GetCallState())
+
+// Hang up the call
+print("\nAction: Hanging up call...")
+Phone.Hangup()
+print("Current telephony state:", Phone.GetCallState())
+
+// ----------------------------------------------------------------------------
+// 2. AUDIO & MICROPHONE CHANNELS (In/Out Routing)
+// ----------------------------------------------------------------------------
+print("\n[2. Audio & Microphone Management (Inputs/Outputs)]")
+
+General inputs = Phone.GetAudioInputs()
+print("Available microphones & audio inputs :", inputs)
+
+General outputs = Phone.GetAudioOutputs()
+print("Available audio outputs              :", outputs)
+
+// Switching audio output route to external speakerphone
+Phone.SetAudioRoute("speaker")
+print("Active audio output route            :", Phone.GetAudioRoute())
+
+// Volume adjustment (0 to 100)
+Phone.SetVolume(90)
+print("Audio volume level                   :", Phone.GetVolume(), "%")
+
+// Microphone audio recording
+print("\nStarting microphone audio recording...")
+string audioFile = Phone.StartRecording("recorded_call.wav")
+print("Capturing audio to target file       :", audioFile)
+print("Is microphone recording active?      :", Phone.IsRecording())
+
+// Stop recording
+Phone.StopRecording()
+print("Recording stopped successfully.")
+print("Is microphone recording active?      :", Phone.IsRecording())
+
+// ----------------------------------------------------------------------------
+// 3. CAMERA, FLASH, BATTERY, GPS & VIBRATION
+// ----------------------------------------------------------------------------
+print("\n[3. Camera, Sensors & Mobile Hardware]")
+
+General cameras = Phone.GetCameras()
+print("Detected camera sensors              :", cameras)
+
+string photo = Phone.CapturePhoto("back")
+print("Snapshot photo captured              :", photo)
+
+// Torch / Flashlight control
+Phone.SetFlashlight(True)
+print("Torch / Flashlight turned ON         : True")
+Phone.SetFlashlight(False)
+print("Torch / Flashlight turned OFF        : False")
+
+// Haptic vibration feedback (250 milliseconds)
+Phone.Vibrate(250)
+print("Haptic vibration triggered           : 250 ms")
+
+// Battery status & geolocation
+General battery = Phone.GetBattery()
+print("Battery level                        :", battery.level, "% (Charging:", battery.isCharging, ")")
+
+General gps = Phone.GetGPS()
+print("GPS Coordinates                      : Lat", gps.latitude, "| Lon", gps.longitude, "| Alt", gps.altitude, "m")
+
+General network = Phone.GetNetworkInfo()
+print("Mobile network connectivity          :", network.type, "(Carrier:", network.carrier, "| SSID:", network.ssid, ")")
+
+// ----------------------------------------------------------------------------
+// 4. PROCESS INPUT/OUTPUT STREAMING (ProcessIO)
+// ----------------------------------------------------------------------------
+print("\n[4. Process Streaming Input/Output Control (ProcessIO)]")
+
+// ProcessIO runs and monitors STDOUT/STDERR streams across mobile terminals & desktops
+int procId = ProcessIO.Spawn("node -v")
+print("Process spawned with ID (PID)        :", procId)
+
+func handleProcessStdout(data, id) {
+    print("📤 [PROCESS STDOUT] Received stream  :", data)
+}
+ProcessIO.OnStdout(procId, handleProcessStdout)
+
+print("Active tracked processes             :", ProcessIO.GetActiveProcesses())
+
+// ----------------------------------------------------------------------------
+// 5. UNIVERSAL LISTENER EVENT ARCHITECTURE (On / Emit)
+// ----------------------------------------------------------------------------
+print("\n[5. Custom Universal Events (ListenerEvent)]")
+
+func handleCustomAlert(payload) {
+    print("⚠️ [DEVICE ALERT] Message received   :", payload)
+}
+Phone.On("custom_device_alert", handleCustomAlert)
+
+Phone.Emit("custom_device_alert", "Alert: CPU temperature within normal operating range (INFO)")
+
+print("\n============================================================================")
+print("✓ All Phone & ProcessIO mobile features validated successfully in English!")
+print("============================================================================")

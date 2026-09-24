@@ -1,51 +1,51 @@
 visibility: All
 
 /* ===============================================================
-   Démonstration LLP : Paramètres de fonction vs Modules de fonction
+   LLP Demonstration: Function Parameters vs Function Modules
    =============================================================== *\
 
 /*
-  1. La fonction Launch déclare :
-     - Des paramètres standards : 'appName' et 'port'
-     - Un module interne : 'module DevMode then ... end'
+  1. The Launch function declares:
+     - Standard parameters: 'appName' and 'port'
+     - An internal module: 'module DevMode then ... end'
 
-  La fonction connaît déjà tout le code de DevMode.
-  C'est le développeur lors de l'appel qui décide s'il active le mode dev
-  ou s'il paramètre ce que le mode dev peut modifier/inspecter ou non.
+  The function contains the implementation of DevMode.
+  The developer at call-site chooses whether to enable DevMode
+  and configure what DevMode is allowed to inspect or test.
 *\
 function Launch(appName, port) then
-    print("[1] Démarrage standard de :", appName, "sur le port :", port)
+    print("[1] Standard startup of:", appName, "on port:", port)
 
-    /- Module interne DevMode : exécuté uniquement si activé à l'appel \
+    /- Internal DevMode module: executed only if enabled during call \
     module DevMode then
-        print("  -> 🔧 [MODULE DevMode ACTIVÉ]")
-        print("  -> Droits de dev accordés pour tester et injecter des valeurs.")
-        print("  -> Interface d'administration et surveillance des flux serveur activée.")
+        print("  -> 🔧 [MODULE DevMode ACTIVATED]")
+        print("  -> Developer privileges granted to test and inject runtime values.")
+        print("  -> Admin interface and server network inspector enabled.")
 
-        /- Le module vérifie les autorisations configurées par le développeur \
+        /- The module checks developer-configured permissions \
         if DevMode.canBypassSecurity == True then
-            print("  -> [DEV ALERTE] Contournement de sécurité ACTIVÉ par le développeur.")
+            print("  -> [DEV ALERT] Security bypass ENABLED by developer.")
         else
-            print("  -> [DEV SÉCURITÉ] Vérifications de sécurité conservées pour le test.")
+            print("  -> [DEV SECURITY] Security validation enforced for test.")
         end
 
         if DevMode.canInspectServerData == True then
-            print("  -> [DEV RÉSEAU] Inspecteur des requêtes/réponses serveur en direct ON.")
+            print("  -> [DEV NETWORK] Live server request/response inspector ON.")
         end
     end
 
-    print("[2] Logiciel prêt à l'emploi.")
+    print("[2] Application ready for use.")
 end
 
-print("=== TEST A : Appel standard sans le module DevMode ===")
-Launch("MonApplication", 8080)
+print("=== TEST A: Standard call without DevMode module ===")
+Launch("MyApplication", 8080)
 
-print("\n=== TEST B : Appel avec activation simple de DevMode ===")
-Launch("MonApplication", 8080, DevMode: True)
+print("\n=== TEST B: Call with simple DevMode activation ===")
+Launch("MyApplication", 8080, DevMode: True)
 
-print("\n=== TEST C : Appel avec configuration précise des droits du DevMode ===")
+print("\n=== TEST C: Call with granular DevMode permission configuration ===")
 General devOptions = Instance.new("DevConfig")
 devOptions.canBypassSecurity = False
 devOptions.canInspectServerData = True
 
-Launch("MonApplication", 8080, DevMode: devOptions)
+Launch("MyApplication", 8080, DevMode: devOptions)

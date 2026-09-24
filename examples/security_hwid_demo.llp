@@ -1,51 +1,51 @@
 // ============================================================================
-// Démonstration Sécurité Matérielle (HWID) & Signature Asymétrique Ed25519
+// Demonstration: Machine-Bound Hardware Security (HWID) & Ed25519 Signatures
 // ============================================================================
 visibility: All
 
 print("==============================================================")
-print("🔒 LLP - SÉCURITÉ MATÉRIELLE MACHINE-BOUND & SIGNATURE ED25519")
+print("🔒 LLP - MACHINE-BOUND HARDWARE SECURITY & ED25519 SIGNATURES")
 print("==============================================================")
 
-// 1. Empreinte Matérielle Fixe (Inamovible)
+// 1. Immutable Hardware Fingerprint
 General devId = Device.GetId()
 General fingerprint = Device.GetFingerprint()
 General sealed = Device.IsKeySealed()
 General pubKey = Device.GetPublicKey()
 
-print("[1] Empreinte de l'appareil hôte :")
-print("    - Identifiant Appareil :", devId)
-print("    - Empreinte HWID (HMAC-SHA256) :", fingerprint)
-print("    - Clé Ed25519 scellée sur le matériel local :", sealed)
+print("[1] Host Device Identity:")
+print("    - Device ID:", devId)
+print("    - HWID Fingerprint (HMAC-SHA256):", fingerprint)
+print("    - Ed25519 Key sealed to local hardware:", sealed)
 
-// 2. Signature Cryptographique Dynamique
+// 2. Dynamic Cryptographic Signing
 General method = "POST"
 General path = "/api/rpc"
 General payload = "{\"service\":\"Orders\",\"method\":\"get\",\"args\":[12]}"
 
 General sigInfo = Device.SignPayload(method, path, payload)
-print("\n[2] Signature d'une trame RPC :")
-print("    - Nonce anti-rejeu :", sigInfo.nonce)
-print("    - Horodatage :", sigInfo.timestamp)
-print("    - Signature Ed25519 :", sigInfo.signature)
+print("\n[2] RPC Frame Cryptographic Signature:")
+print("    - Anti-replay nonce:", sigInfo.nonce)
+print("    - Timestamp:", sigInfo.timestamp)
+print("    - Ed25519 signature:", sigInfo.signature)
 
-// 3. Vérification de la signature
+// 3. Signature Verification
 General isValid = Device.VerifySignature(pubKey, sigInfo.signature, sigInfo.nonce, sigInfo.timestamp, method, payload)
-print("    - Signature vérifiée mathématiquement :", isValid)
+print("    - Mathematically verified signature:", isValid)
 
-// 4. Test d'invalidation sur payload altéré
+// 4. Tamper Test on Altered Payload
 General alteredPayload = "{\"service\":\"Orders\",\"method\":\"get\",\"args\":[9999]}"
 General isAlteredValid = Device.VerifySignature(pubKey, sigInfo.signature, sigInfo.nonce, sigInfo.timestamp, method, alteredPayload)
-print("    - Payload falsifié validé (doit être false) :", isAlteredValid)
+print("    - Tampered payload verified (must be false):", isAlteredValid)
 
-// 5. Fonctions d'administration et révocation d'urgence côté Serveur
-print("\n[3] Gestion de la flotte et révocation d'urgence (Server) :")
+// 5. Fleet Management & Emergency Revocation (Server-Side)
+print("\n[3] Device Fleet Management & Emergency Revocation (Server):")
 Server.RevokeDevice(devId)
 General isRevoked = Server.IsDeviceRevoked(devId)
-print("    - Révocation immédiate de l'appareil :", isRevoked)
+print("    - Immediate device revocation:", isRevoked)
 
 Server.UnrevokeDevice(devId)
 General isStillRevoked = Server.IsDeviceRevoked(devId)
-print("    - Statut révoqué après réhabilitation :", isStillRevoked)
+print("    - Revocation status after rehabilitation:", isStillRevoked)
 
-print("\n✨ Sécurité matérielle & cryptographique 100% opérationnelle !")
+print("\n✨ Hardware & cryptographic security 100% operational!")

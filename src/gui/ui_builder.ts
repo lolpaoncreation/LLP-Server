@@ -11,6 +11,55 @@ export interface UiBuilderOptions {
   openBrowser?: boolean;
 }
 
+export function convertIllpsToCss(illps: string): string {
+  if (!illps) return "";
+
+  let css = illps.replace(/\/\*([\s\S]*?)\*\\/g, "/*$1*/");
+  css = css.replace(/\/-.*$/gm, "");
+  css = css.replace(/visibility:\s*\w+;?/gi, "");
+
+  css = css.replace(/([^{]+)\{([^}]+)\}/g, (match, rawSelector, body) => {
+    let sel = rawSelector.trim();
+    if (/^Background/i.test(sel)) {
+      sel = "#artboard-root";
+    } else {
+      sel = sel.replace(/(?:[A-Za-z0-9_]+)?#([A-Za-z0-9_]+)/g, "#$1, [data-id=\"$1\"]");
+      sel = sel.replace(/(?:[A-Za-z0-9_]+)\.([A-Za-z0-9_]+)/g, ".$1, [data-id=\"$1\"]");
+    }
+
+    let lines = body.split(/\r?\n/).map((l: string) => l.trim()).filter(Boolean);
+    let propLines = lines.map((line: string) => {
+      let l = line;
+      if (/responsive:\s*(true|false);?/i.test(l)) return "";
+
+      l = l.replace(/fontSize:/gi, "font-size:")
+           .replace(/marginBottom:/gi, "margin-bottom:")
+           .replace(/marginTop:/gi, "margin-top:")
+           .replace(/marginLeft:/gi, "margin-left:")
+           .replace(/marginRight:/gi, "margin-right:")
+           .replace(/minWidth:/gi, "min-width:")
+           .replace(/maxWidth:/gi, "max-width:")
+           .replace(/minHeight:/gi, "min-height:")
+           .replace(/maxHeight:/gi, "max-height:")
+           .replace(/borderRadius:/gi, "border-radius:")
+           .replace(/backgroundColor:/gi, "background-color:")
+           .replace(/align:\s*center/gi, "text-align: center; margin-left: auto; margin-right: auto;")
+           .replace(/align:\s*right/gi, "text-align: right; margin-left: auto;")
+           .replace(/align:\s*left/gi, "text-align: left; margin-right: auto;")
+           .replace(/font:\s*bold/gi, "font-weight: bold;");
+
+      if (!l.endsWith(";") && l.includes(":")) {
+        l += ";";
+      }
+      return "    " + l;
+    }).filter(Boolean);
+
+    return sel + " {\n" + propLines.join("\n") + "\n}\n";
+  });
+
+  return css;
+}
+
 export function getUiBuilderHtml(options: {
   fileName: string;
   illpContent: string;
@@ -27,6 +76,9 @@ export function getUiBuilderHtml(options: {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLP UI BUILDER - ${fileName}</title>
     <link rel="icon" type="image/png" href="${LLP_LOGO_BASE64}">
+    <style id="illps-compiled-styles">
+${convertIllpsToCss(illpsContent)}
+    </style>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         
@@ -454,6 +506,12 @@ export function getUiBuilderHtml(options: {
             flex-direction: column;
             gap: 16px;
             position: relative;
+            background: #ffffff;
+            color: #0f172a;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
         }
 
         /* Glowing drop insertion placeholder */
@@ -1646,6 +1704,34 @@ export function getUiBuilderHtml(options: {
                     return;
                 }
 
+                // Row / Column
+                if (tr.startsWith('Row') || tr.startsWith('Column')) {
+                    const isRow = tr.startsWith('Row');
+                    const mName = tr.match(/^(?:Row|Column)\\s+"([^"]+)"/);
+                    const item = {
+                        id: mName ? mName[1] : (isRow ? 'Row_' : 'Col_') + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : (isRow ? 'Row' : 'Column'),
+                        type: isRow ? 'Row' : 'Column',
+                        children: []
+                    };
+                    getCurrentTarget().push(item);
+                    if (tr.endsWith('{')) stack.push(item);
+                    return;
+                }
+
+                // Image
+                if (tr.startsWith('Image')) {
+                    const mName = tr.match(/^Image\\s+"([^"]+)"/);
+                    const mSrc = tr.match(/src:\\s*"([^"]+)"/);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'Image_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'Image',
+                        type: 'Image',
+                        src: mSrc ? mSrc[1] : ''
+                    });
+                    return;
+                }
+
                 // Fallback generic component
                 const mType = tr.match(/^([A-Za-z0-9_]+)\\s+"([^"]+)"/);
                 if (mType) {
@@ -1661,47 +1747,6 @@ export function getUiBuilderHtml(options: {
                     if (tr.endsWith('{')) stack.push(item);
                 }
             });
-
-            // If empty, provide the default showcase matching the user screenshot
-            if (list.length === 0) {
-                list.push(
-                    {
-                        id: 'Header_1',
-                        name: 'Header',
-                        type: 'Header',
-                        title: 'Header',
-                        subtitle: 'Welcome, User'
-                    },
-                    {
-                        id: 'DataGrid_Sessions',
-                        name: 'ActiveUserSessions',
-                        type: 'DataGrid',
-                        title: 'Active User Sessions',
-                        rpcSource: 'server.Users.list',
-                        pageSize: 25,
-                        autoPagination: true,
-                        columns: ['Name', 'Email', 'User', 'Datetime', 'Actions']
-                    },
-                    {
-                        id: 'Kanban_Pipeline',
-                        name: 'TaskPipeline',
-                        type: 'Kanban',
-                        title: 'Task Pipeline',
-                        rpcSource: 'server.Tasks.list',
-                        columns: ['Task', 'Completed', 'Task']
-                    },
-                    {
-                        id: 'Card_Form',
-                        name: 'FormSection',
-                        type: 'Card',
-                        title: 'Form Controls',
-                        children: [
-                            { id: 'Input_1', name: 'Input', type: 'TextInput', placeholder: 'Input' },
-                            { id: 'Btn_1', name: 'PrimaryButton', type: 'Button', text: 'Primary Button', variant: 'primary' }
-                        ]
-                    }
-                );
-            }
 
             return list;
         }
@@ -1769,13 +1814,32 @@ export function getUiBuilderHtml(options: {
             artboardRoot.innerHTML = '';
             renderElementsList(elements, artboardRoot);
 
+            if (elements.length === 0 && !isPreviewMode) {
+                const emptyNotice = document.createElement('div');
+                emptyNotice.className = 'empty-canvas-notice';
+                emptyNotice.style.padding = '60px 20px';
+                emptyNotice.style.textAlign = 'center';
+                emptyNotice.style.color = '#94a3b8';
+                emptyNotice.style.border = '2px dashed rgba(148, 163, 184, 0.3)';
+                emptyNotice.style.borderRadius = '8px';
+                emptyNotice.style.margin = '40px auto';
+                emptyNotice.style.maxWidth = '450px';
+                emptyNotice.style.pointerEvents = 'none';
+                emptyNotice.innerHTML = \`
+                    <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
+                    <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #475569;">Page Blanche (Aucun élément)</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Glissez-déposez des composants depuis la palette ou conservez la page vierge.</div>
+                \`;
+                artboardRoot.appendChild(emptyNotice);
+            }
+
             // Update counter
             let count = 0;
             function countNodes(l) {
                 l.forEach(x => { count++; if (x.children) countNodes(x.children); });
             }
             countNodes(elements);
-            elementsCounter.textContent = count + ' component' + (count > 1 ? 's' : '');
+            elementsCounter.textContent = count + ' component' + (count !== 1 ? 's' : '');
         }
 
         function renderElementsList(list, domParent) {
@@ -2036,12 +2100,27 @@ export function getUiBuilderHtml(options: {
                     const t = document.createElement('div');
                     t.style.fontSize = '16px';
                     t.style.fontWeight = 'bold';
-                    t.style.color = '#fff';
+                    t.style.color = 'inherit';
                     t.textContent = el.content || 'Header Title';
                     t.contentEditable = !isPreviewMode;
                     t.oninput = () => { el.content = t.textContent; };
                     wrapper.appendChild(t);
-                } else if (el.type === 'Card' || el.type === 'Stack' || el.type === 'ResponsiveGrid') {
+                } else if (el.type === 'Image') {
+                    const imgBox = document.createElement('div');
+                    imgBox.style.display = 'flex';
+                    imgBox.style.flexDirection = 'column';
+                    imgBox.style.alignItems = 'center';
+                    imgBox.style.justifyContent = 'center';
+                    imgBox.style.padding = '12px';
+                    imgBox.style.background = 'rgba(0,0,0,0.03)';
+                    imgBox.style.border = '1px dashed #cbd5e1';
+                    imgBox.style.borderRadius = '6px';
+                    imgBox.innerHTML = \`
+                        <div style="font-size: 24px; margin-bottom: 4px;">🖼️</div>
+                        <div style="font-size: 11px; color: #64748b;">\${el.src || el.name || 'Image'}</div>
+                    \`;
+                    wrapper.appendChild(imgBox);
+                } else if (el.type === 'Card' || el.type === 'Stack' || el.type === 'ResponsiveGrid' || el.type === 'Row' || el.type === 'Column' || el.type === 'Container') {
                     // Container Box
                     const cont = document.createElement('div');
                     cont.className = 'canvas-form-block';
@@ -2052,7 +2131,8 @@ export function getUiBuilderHtml(options: {
                         </div>
                     \`;
                     const slot = document.createElement('div');
-                    slot.className = 'container-drop-zone' + (el.type === 'ResponsiveGrid' ? ' grid-layout' : (el.type === 'Stack' && el.direction === 'horizontal' ? ' row-layout' : ''));
+                    const isRow = el.type === 'Row' || (el.type === 'Stack' && el.direction === 'horizontal');
+                    slot.className = 'container-drop-zone' + (el.type === 'ResponsiveGrid' ? ' grid-layout' : (isRow ? ' row-layout' : ''));
                     slot.setAttribute('data-container-id', el.id);
 
                     el.children = el.children || [];
@@ -2568,7 +2648,13 @@ export function startUiBuilderServer(options: UiBuilderOptions = {}): Promise<{ 
     if (fs.existsSync(targetFilePath)) {
       illpContent = fs.readFileSync(targetFilePath, "utf8");
     } else {
-      illpContent = 'visibility: All\\n\\nBackground "MainWindow" responsive: true {\\n}';
+      illpContent = 'visibility: All\n\nBackground "MainWindow" responsive: true {\n}';
+    }
+
+    const targetIllpsPath = targetFilePath.replace(/\.illp$/, ".illps");
+    let illpsContent = "";
+    if (fs.existsSync(targetIllpsPath)) {
+      illpsContent = fs.readFileSync(targetIllpsPath, "utf8");
     }
 
     const devMgr = DeviceIdentityManager.getInstance();
@@ -2598,6 +2684,9 @@ export function startUiBuilderServer(options: UiBuilderOptions = {}): Promise<{ 
               const dir = path.dirname(targetFilePath);
               if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
               fs.writeFileSync(targetFilePath, data.content, "utf8");
+              if (data.illpsContent !== undefined) {
+                fs.writeFileSync(targetIllpsPath, data.illpsContent, "utf8");
+              }
               console.log(`[LLP UI Builder] Fichier sauvegardé : ${targetFilePath}`);
               res.writeHead(200, { "Content-Type": "application/json" });
               res.end(JSON.stringify({ ok: true, message: "Sauvegardé avec succès" }));
@@ -2629,6 +2718,7 @@ export function startUiBuilderServer(options: UiBuilderOptions = {}): Promise<{ 
       const html = getUiBuilderHtml({
         fileName: path.basename(targetFilePath),
         illpContent,
+        illpsContent,
         deviceId,
         isStandalone: true
       });

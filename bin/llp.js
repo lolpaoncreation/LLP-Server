@@ -4,7 +4,21 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
-const { runFile, executeLLP, createGlobalEnvironment, startGuiApplication, startUiBuilderServer, createProjectStructure, getProjectInfo, analyzeSource, formatDiagnosticReport } = require("../dist/index.js");
+const {
+  runFile,
+  executeLLP,
+  createGlobalEnvironment,
+  startGuiApplication,
+  startUiBuilderServer,
+  createProjectStructure,
+  getProjectInfo,
+  analyzeSource,
+  formatDiagnosticReport,
+  addLibraryToProject,
+  enforceLibDirectoryProtection,
+  buildLlpDllBinary,
+  setFileReadOnly
+} = require("../dist/index.js");
 const { CryptedLolpaonDatabase } = require("../dist/stdlib/cllpdb.js");
 
 const args = process.argv.slice(2);
@@ -12,12 +26,14 @@ const args = process.argv.slice(2);
 function showHelp() {
   console.log(`
 ===================================================
- 🦚 LLP Language (lolpaon) - CLI & Tools v1.4
+ 🦚 LLP Language (lolpaon) - CLI & Tools v1.5
 ===================================================
 
 Usage :
   llp create <name> [--client-server|--monolithic]
                                             Create project with chosen architecture (Client/Server or All-in-One)
+  llp add-lib <name|file.dll>               Add a read-only .dll library to lib/
+  llp lib <list|add|protect>                Manage project libraries (.dll in lib/ strictly read-only)
   llp builder [file.illp] [--port <port>]   Launch Visual UI Builder (Drag-and-Drop, Data Binding, Modif)
   llp designer [file.illp]                  Alias for llp builder
   llp app [project_dir]                     Launch Interactive Application (GUI Window)
@@ -36,6 +52,9 @@ Examples :
   llp create MySuperApp                     Interactive project creation (Client/Server or Monolithic)
   llp create MyApp --client-server          Create Client/Server project (Client exe + Server BDD)
   llp create MyLocalApp --monolithic        Create standalone all-in-one project (Embedded BDD)
+  llp add-lib custom_plugin.dll             Add read-only custom .dll library to lib/
+  llp lib list                              List all read-only .dll libraries in lib/
+  llp lib protect                           Enforce read-only .dll mode in lib/
   llp builder client/views/main.illp        Visual UI Builder with drag & drop and live edits
   llp build --client                        Build standalone client executable
   llp build --server                        Build dedicated server executable/package
@@ -51,7 +70,67 @@ if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
 }
 
 if (args[0] === "--version" || args[0] === "-v") {
-  console.log("🦚 LLP Language v1.4.0 (lolpaon)");
+  console.log("🦚 LLP Language v1.5.4 (lolpaon)");
+  process.exit(0);
+}
+
+// 0.05 LIB & ADD-LIB COMMAND (Bibliothèques .dll en lecture seule)
+if (args[0] === "add-lib" || args[0] === "lib") {
+  const projectDir = process.cwd();
+  const subCmd = args[0] === "add-lib" ? "add" : (args[1] || "list");
+  const targetLib = args[0] === "add-lib" ? args[1] : args[2];
+
+  if (subCmd === "add") {
+    if (!targetLib) {
+      console.error("Erreur : Veuillez spécifier le nom ou le chemin de la bibliothèque : llp add-lib <nom|fichier.dll>");
+      process.exit(1);
+    }
+    try {
+      const res = addLibraryToProject(projectDir, targetLib);
+      console.log(`\n===================================================`);
+      console.log(`  📦 Bibliothèque LLP Ajoutée en Lecture Seule`);
+      console.log(`===================================================`);
+      console.log(`Fichier : ${res.libFile}`);
+      console.log(`Statut  : [LECTURE SEULE] (Protection activée)`);
+      console.log(`Message : ${res.message}\n`);
+      process.exit(0);
+    } catch (err) {
+      console.error("Erreur lors de l'ajout de la bibliothèque :", err.message);
+      process.exit(1);
+    }
+  }
+
+  if (subCmd === "protect") {
+    const res = enforceLibDirectoryProtection(projectDir);
+    console.log(`\n===================================================`);
+    console.log(`  🔒 Protection du Dossier lib/`);
+    console.log(`===================================================`);
+    console.log(`✓ Bibliothèques .dll vérifiées & verrouillées en lecture seule : ${res.totalDlls}`);
+    if (res.cleaned > 0) {
+      console.log(`✓ Fichiers non-.dll nettoyés de lib/ : ${res.cleaned}`);
+    }
+    console.log(`\n[Succès] Le dossier lib/ est strictement réservé aux .dll en lecture seule.\n`);
+    process.exit(0);
+  }
+
+  // list
+  const libDir = path.join(projectDir, "lib");
+  if (!fs.existsSync(libDir)) {
+    console.log(`Aucun dossier lib/ trouvé dans ${projectDir}.`);
+    process.exit(0);
+  }
+  const files = fs.readdirSync(libDir);
+  console.log(`\n===================================================`);
+  console.log(`  📚 Bibliothèques LLP dans lib/ (${projectDir})`);
+  console.log(`===================================================`);
+  for (const f of files) {
+    const full = path.join(libDir, f);
+    const stats = fs.statSync(full);
+    const isReadOnly = (stats.mode & 0o200) === 0;
+    const isDll = f.toLowerCase().endsWith(".dll");
+    console.log(`  ${isDll ? "📄" : "⚠️"} ${f.padEnd(20)} [${(stats.size / 1024).toFixed(1)} KB] ${isReadOnly ? "🔒 [Lecture Seule]" : "✏️ [Modifiable - ATTENTION]"}`);
+  }
+  console.log(`\nPour verrouiller tous les fichiers en lecture seule : llp lib protect\n`);
   process.exit(0);
 }
 
@@ -369,10 +448,6 @@ if (args[0] === "compile" || args[0] === "build") {
         if (fs.existsSync(destPath)) {
           try {
             fs.chmodSync(destPath, 0o666);
-            if (process.platform === "win32") {
-              const { execSync } = require("child_process");
-              execSync(`attrib -r "${destPath}"`, { stdio: "ignore" });
-            }
           } catch (e) {}
         }
         try {
@@ -573,7 +648,7 @@ if (args[0] === "create") {
         console.log(`  │   ├── services/       (data_service.llp)`);
         console.log(`  │   └── data/           (app.cllpdb sécurisée)`);
         console.log(`  ├── shared/             (protocol.llp - Contrats & constantes RPC)`);
-        console.log(`  ├── lib/                (9 bibliothèques standard LLP en lecture seule)`);
+        console.log(`  ├── lib/                (Bibliothèques .dll en lecture seule)`);
         console.log(`  └── project.config      (Configuration de l'architecture)`);
         console.log(`\nCommandes pour démarrer :`);
         console.log(`  1. Démarrer le serveur  : llp server ${projName}/server/main.llp --port 8080`);
@@ -589,7 +664,7 @@ if (args[0] === "create") {
         console.log(`  │   ├── views/          (main.illp, main.illps)`);
         console.log(`  │   ├── services/       (app_service.llp)`);
         console.log(`  │   └── database/       (app.cllpdb compilée dans le logiciel)`);
-        console.log(`  ├── lib/                (9 bibliothèques standard LLP)`);
+        console.log(`  ├── lib/                (Bibliothèques .dll en lecture seule)`);
         console.log(`  └── project.config      (Configuration de l'architecture)`);
         console.log(`\nCommandes pour démarrer :`);
         console.log(`  1. Lancer l'application : llp app ${projName}`);

@@ -23,6 +23,8 @@ import { registerProbLlp } from "./stdlib/probllp";
 import { registerGuiApp } from "./stdlib/gui_app";
 import { registerSession } from "./stdlib/session";
 import { registerDevice } from "./stdlib/device";
+import { registerOSI } from "./stdlib/osi";
+import { registerPhone } from "./stdlib/phone";
 import { RuntimeVal } from "./runtime/values";
 
 export function createGlobalEnvironment(): Environment {
@@ -46,6 +48,8 @@ export function createGlobalEnvironment(): Environment {
   registerGuiApp(env);
   registerSession(env);
   registerDevice(env);
+  registerOSI(env);
+  registerPhone(env);
 
   return env;
 }
@@ -119,4 +123,14 @@ export function runFile(filePath: string, options?: { skipCheck?: boolean }) {
 
 export { startGuiApplication } from "./gui/app_runner";
 export { startUiBuilderServer, getUiBuilderHtml } from "./gui/ui_builder";
-export { createProjectStructure, getProjectInfo, ProjectArchitecture, CreateProjectOptions } from "./project/scaffold";
+export {
+  createProjectStructure,
+  getProjectInfo,
+  ProjectArchitecture,
+  CreateProjectOptions,
+  buildLlpDllBinary,
+  setFileReadOnly,
+  addLibraryToProject,
+  enforceLibDirectoryProtection,
+  cleanNonDllFilesFromLib
+} from "./project/scaffold";

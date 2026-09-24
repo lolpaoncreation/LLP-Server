@@ -26,13 +26,24 @@ const KNOWN_MODULES = {
     System: ["Sleep", "Exit", "GetEnv", "GetPlatform", "GetTimestamp", "Time"],
     UIValidator: ["ValidateRequired", "ValidateNumber", "ValidateEmail", "ShowSuccess", "ShowError"],
     Instance: ["new", "FindFirstChild", "GetChildren", "SetProperty", "GetProperty"],
-    Console: ["Log", "Error", "Warn", "Clear"]
+    Console: ["Log", "Error", "Warn", "Clear"],
+    Bitwise: ["And", "Or", "Xor", "Not", "ShiftLeft", "ShiftRight"],
+    ByteBuffer: ["Alloc", "FromString", "FromHex", "Size", "GetCapacity", "WriteUInt8", "ReadUInt8", "WriteUInt16BE", "ReadUInt16BE", "WriteUInt32BE", "ReadUInt32BE", "WriteFloatBE", "ReadFloatBE", "WriteString", "ReadString", "ToHex", "ToBuffer"],
+    Ethernet: ["CRC32", "BuildFrame"],
+    IP: ["Checksum", "BuildIPv4Header"],
+    Socket: ["Create", "Connect", "Bind", "Send", "SendTo", "Recv", "RecvFrom", "SetSockOpt", "GetSockOpt", "GetStats", "Close"],
+    NetOptimizer: ["PackBinary", "Compress", "Decompress", "AnalyzePayload"],
+    NetworkProfiler: ["GetBytesReceived", "GetBytesSent", "GetPacketsReceived", "GetPacketsSent", "GetStats", "Reset"],
+    Phone: ["On", "Off", "Emit", "OnIncomingCall", "OnCallAnswered", "OnCallEnded", "OnCallStateChanged", "Dial", "Answer", "Hangup", "GetCallState", "SimulateIncomingCall", "GetAudioInputs", "GetAudioOutputs", "SetAudioRoute", "GetAudioRoute", "StartRecording", "StopRecording", "IsRecording", "SetVolume", "GetVolume", "PlayAudio", "GetCameras", "CapturePhoto", "SetFlashlight", "Vibrate", "GetBattery", "GetGPS", "GetNetworkInfo"],
+    ProcessIO: ["Spawn", "OnStdout", "OnStderr", "OnExit", "WriteStdin", "Kill", "GetActiveProcesses"]
 };
 const GLOBAL_KEYWORDS = [
     "General", "Global", "int", "float", "string", "bool",
     "if", "then", "else", "end", "do", "while", "for", "in",
     "func", "return", "true", "True", "false", "False",
-    "null", "Null", "new", "visibility", "print", "input", "PY", "RPC"
+    "null", "Null", "new", "visibility", "print", "input", "PY", "PI", "RPC",
+    "Bitwise", "ByteBuffer", "Ethernet", "IP", "Socket", "NetOptimizer", "NetworkProfiler",
+    "Phone", "ProcessIO"
 ];
 function analyzeSource(source, filePath = "source.llp") {
     const diagnostics = [];

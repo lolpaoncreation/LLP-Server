@@ -1,0 +1,84 @@
+// ============================================================================
+// LLP LOW-LEVEL SYSTEMS PROGRAMMING & OSI NETWORK OPTIMIZATION (LAYERS 1 TO 7)
+// ============================================================================
+// Demonstrates how to program at the lowest OSI layers (like in C++)
+// to minimize the number of bytes transferred over local and remote networks.
+// ============================================================================
+
+print("============================================================================")
+print("  Demonstration: Low-Level OSI Programming & Network Bandwidth Optimization")
+print("============================================================================")
+
+// ----------------------------------------------------------------------------
+// LAYERS 1 & 2: Physical & Data Link (Direct Memory & Ethernet Frames)
+// ----------------------------------------------------------------------------
+print("\n[LAYERS 1 & 2: Direct Memory ByteBuffer & Ethernet II Frame]")
+
+// Bitwise masking and shifting (C++ style)
+int flags = 12
+int mask = 10
+int masked = Bitwise.And(flags, mask)
+print("Bitwise operation Bitwise.And(12, 10) :", masked)
+print("Bit shifting Bitwise.ShiftLeft(1, 4)  :", Bitwise.ShiftLeft(1, 4))
+
+// Direct raw memory buffer without JSON overhead (uint8_t* equivalent)
+General rawBuffer = ByteBuffer.Alloc(32)
+rawBuffer.WriteUInt8(1)               // Packet opcode (1 byte)
+rawBuffer.WriteUInt16BE(4875)         // Remote port (2 bytes)
+rawBuffer.WriteString("PingPacket")   // Length-prefixed string
+print("Exact memory size in RAM (bytes)     :", rawBuffer.Size())
+print("Hexadecimal binary dump              :", rawBuffer.ToHex())
+
+// Constructing a full Ethernet II frame with 32-bit CRC (FCS)
+General ethFrame = Ethernet.BuildFrame("AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66", 2048, "PayloadTest")
+print("Cyclic Redundancy Check (CRC-32)     :", Ethernet.CRC32(ethFrame))
+
+// ----------------------------------------------------------------------------
+// LAYER 3: Network (IPv4 Header & RFC 1071 Checksum)
+// ----------------------------------------------------------------------------
+print("\n[LAYER 3: IPv4 Header & Internet Checksum]")
+General ipHeader = IP.BuildIPv4Header("192.168.1.100", "192.168.1.1", 6, 64, 128)
+print("Forged IPv4 header (20 bytes standard RFC 791)")
+print("Calculated IP header checksum        :", IP.Checksum(ipHeader))
+
+// ----------------------------------------------------------------------------
+// LAYER 4: Transport (Berkeley Sockets C++ style & TCP_NODELAY)
+// ----------------------------------------------------------------------------
+print("\n[LAYER 4: Low-Level Sockets & TCP_NODELAY]")
+General clientSocket = Socket.Create(Socket.AF_INET, Socket.SOCK_STREAM, Socket.IPPROTO_TCP)
+
+// Disabling Nagle's algorithm to eliminate 40ms wait latency (0ms immediate dispatch)
+clientSocket.SetSockOpt(0, Socket.TCP_NODELAY, 1)
+print("Socket option TCP_NODELAY enabled (Zero latency network stream)")
+
+// ----------------------------------------------------------------------------
+// LAYERS 5 TO 7: Session, Presentation, Application & Bandwidth Reduction
+// ----------------------------------------------------------------------------
+print("\n[LAYERS 5-7: Bandwidth Optimization - Binary Struct Packing]")
+
+// Case A: Conventional JSON text payload (high network overhead)
+string jsonPayload = "{\"productId\":105,\"stock\":19,\"price\":449.00,\"name\":\"Monitor\"}"
+General jsonAnalysis = NetOptimizer.AnalyzePayload(jsonPayload)
+print("1. Standard raw JSON text payload    :", jsonAnalysis.RawBytes, "bytes")
+
+// Case B: Compact binary struct packing (zero JSON overhead)
+// Format: I (UInt32 ID: 4 bytes) + H (UInt16 Stock: 2 bytes) + f (Float32 Price: 4 bytes) + s (String: 9 bytes)
+General packedStruct = NetOptimizer.PackBinary("IHfs", 105, 19, 449.00, "Monitor")
+print("2. Pure binary NetOptimizer.PackBinary:", packedStruct.Size(), "bytes")
+
+// Bandwidth savings comparison
+int jsonSize = jsonAnalysis.RawBytes
+int binarySize = packedStruct.Size()
+int bytesSaved = jsonSize - binarySize
+int percentSaved = Math.Round((bytesSaved * 100) / jsonSize)
+print("-> Bandwidth saved over network       :", bytesSaved, "bytes saved (-", percentSaved, "%)")
+
+// ----------------------------------------------------------------------------
+// RESOURCE PROFILING & NETWORK IN/OUT COUNTERS
+// ----------------------------------------------------------------------------
+print("\n[RESOURCE PROFILING & NETWORK IN/OUT METRICS]")
+print("Total incoming bytes received (RX)   :", NetworkProfiler.GetBytesReceived(), "bytes")
+print("Total outgoing bytes sent (TX)       :", NetworkProfiler.GetBytesSent(), "bytes")
+print("Total network packets processed      :", NetworkProfiler.GetPacketsSent() + NetworkProfiler.GetPacketsReceived())
+
+print("\n✓ Bandwidth minimization techniques applied successfully in English.")

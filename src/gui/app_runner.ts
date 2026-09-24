@@ -63,12 +63,25 @@ export function startGuiApplication(options: GuiServerOptions = {}): Promise<{ s
       projectDir = path.join(projectDir, "examples", "product_management");
     }
 
-    const dbPath = path.join(projectDir, "data", "products.cllpdb");
+    // Détection de la base de données du projet (.cllpdb)
+    let dbPath = path.join(projectDir, "data", "products.cllpdb");
     if (!fs.existsSync(dbPath)) {
-      return reject(new Error(`Base de données introuvable : ${dbPath}`));
+      const dbCandidates = [
+        path.join(projectDir, "server", "data", "app.cllpdb"),
+        path.join(projectDir, "src", "database", "app.cllpdb"),
+        path.join(projectDir, "data", "app.cllpdb"),
+        path.join(projectDir, "app.cllpdb")
+      ];
+      for (const cand of dbCandidates) {
+        if (fs.existsSync(cand)) {
+          dbPath = cand;
+          break;
+        }
+      }
     }
 
-    const db = new CryptedLolpaonDatabase(dbPath);
+    const effectiveDbPath = fs.existsSync(dbPath) ? dbPath : path.join(projectDir, "app.cllpdb");
+    const db: CryptedLolpaonDatabase = new CryptedLolpaonDatabase(effectiveDbPath);
     let currentUser: { username: string; role: string } | null = null;
 
     const port = options.port || 4875;
@@ -373,10 +386,63 @@ export function startGuiApplication(options: GuiServerOptions = {}): Promise<{ s
         }
       }
 
+function findProjectIllpFile(projectDir: string): { illpPath: string; illpsPath: string } | null {
+  const candidates = [
+    path.join(projectDir, "client", "views", "main.illp"),
+    path.join(projectDir, "src", "views", "main.illp"),
+    path.join(projectDir, "views", "main.illp"),
+    path.join(projectDir, "interfaces", "main.illp"),
+    path.join(projectDir, "main.illp")
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      const s = c.replace(/\.illp$/, ".illps");
+      return { illpPath: c, illpsPath: fs.existsSync(s) ? s : "" };
+    }
+  }
+  return null;
+}
+
+function renderBlankInterfaceHtml(illpContent: string, illpsContent: string, title: string = "LLP Application"): string {
+  let bg = "#ffffff";
+  const bgMatch = illpsContent.match(/background\s*:\s*([^;\r\n]+)/i) || illpContent.match(/background\s*:\s*["']?([^"';\r\n]+)["']?/i);
+  if (bgMatch) {
+    bg = bgMatch[1].trim();
+  }
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: ${bg};
+      overflow: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+</body>
+</html>`;
+}
+
       // 9. SERVE APPLICATION HTML & ASSETS
       if (pathname === "/" || pathname === "/index.html") {
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        res.end(renderApplicationHtml(currentAppConfig));
+        const customIllp = findProjectIllpFile(projectDir);
+        if (customIllp && !fs.existsSync(path.join(projectDir, "interfaces", "dashboard.illp"))) {
+          const illpContent = fs.readFileSync(customIllp.illpPath, "utf-8");
+          const illpsContent = customIllp.illpsPath && fs.existsSync(customIllp.illpsPath) ? fs.readFileSync(customIllp.illpsPath, "utf-8") : "";
+          res.end(renderBlankInterfaceHtml(illpContent, illpsContent, path.basename(projectDir)));
+        } else {
+          res.end(renderApplicationHtml(currentAppConfig));
+        }
         return;
       }
 
@@ -399,7 +465,7 @@ export function startGuiApplication(options: GuiServerOptions = {}): Promise<{ s
       console.log(`   LLP Interactive GUI - Lolpaon Pro Application`);
       console.log(`===================================================`);
       console.log(`✓ Serveur d'application démarré sur : ${url}`);
-      console.log(`✓ Base chiffrée connectée : ${path.basename(dbPath)}`);
+      console.log(`✓ Base chiffrée connectée : ${db && fs.existsSync(dbPath) ? path.basename(dbPath) : "Aucune (Mode Interface Pure)"}`);
       console.log(`✓ Résolution fenêtre (App.Launch) : ${currentAppConfig.windowWidth}x${currentAppConfig.windowHeight} px`);
       console.log(`✓ Mode développeur (DevMode)      : ${currentAppConfig.devMode ? "Activé (Outils & Tests)" : "Désactivé"}`);
       console.log(`✓ Verrouillage taille (App.Lock)  : ${currentAppConfig.locked ? "Oui (Taille fixe, aucun redimensionnement)" : "Non"}`);
@@ -1020,6 +1086,15 @@ function renderApplicationHtml(config: typeof currentAppConfig = currentAppConfi
     </div>
 
     <div class="header-actions">
+      <div id="header-inactivity" class="session-widget" style="display: none; cursor: pointer;" onclick="confirmUserPresence()" title="Surveillance d'inactivité (2 min)">
+        <span class="session-indicator" id="inactivity-dot"></span>
+        <span id="inactivity-text">🟢 Session Active</span>
+      </div>
+
+      <button id="btn-test-idle" class="btn btn-outline" style="display: none; padding: 6px 12px; font-size: 12px; border-color: var(--warning); color: var(--warning);" onclick="simulateInactivity()" title="Tester immédiatement le compte à rebours de 45 minutes (simule 2 min sans action)">
+        ⏱️ Test Inactivité (2m)
+      </button>
+
       <div id="header-session" class="session-widget" style="display: none;">
         <span class="session-indicator" id="session-dot"></span>
         <span id="session-countdown">Session BD : Active (Permanente)</span>
@@ -1138,6 +1213,21 @@ function renderApplicationHtml(config: typeof currentAppConfig = currentAppConfi
         </button>
       </div>
 
+      <!-- Live Search & Category Filter Bar -->
+      <div style="display: flex; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; min-width: 260px;">
+          <input type="text" id="product-search" class="form-input" placeholder="🔍 Rechercher un produit par nom en temps réel..." oninput="filterProducts()">
+        </div>
+        <div style="min-width: 220px;">
+          <select id="product-filter-cat" class="form-input" onchange="filterProducts()">
+            <option value="all">📦 Toutes les Catégories</option>
+            <option value="1">💻 Informatique & PC</option>
+            <option value="2">⌨️ Périphériques & Claviers</option>
+            <option value="3">🎧 Audio & Son</option>
+          </select>
+        </div>
+      </div>
+
       <div id="catalog-grid" class="products-grid">
         <!-- Products cards inserted dynamically -->
       </div>
@@ -1218,6 +1308,33 @@ function renderApplicationHtml(config: typeof currentAppConfig = currentAppConfi
     </div>
   </div>
 
+  <!-- MODAL: INACTIVITY TIMEOUT WARNING (Compte à rebours 45min après 2min d'inactivité) -->
+  <div id="modal-inactivity" class="modal-overlay" style="display: none; z-index: 9999; backdrop-filter: blur(10px); background: rgba(15, 17, 26, 0.90);">
+    <div class="modal-card" style="max-width: 520px; text-align: center; border: 2px solid var(--warning); box-shadow: 0 25px 70px rgba(250, 179, 135, 0.35); padding: 32px;">
+      <div style="font-size: 54px; margin-bottom: 12px; animation: pulse 1.8s infinite;">⏰</div>
+      <h3 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">Alerte d'Inactivité Détectée</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6;">
+        Aucune action (souris, clavier, clic) n'a été détectée depuis plus de <b>2 minutes</b>.<br>
+        Pour des raisons de sécurité, votre session du logiciel sera automatiquement clôturée dans :
+      </p>
+      
+      <div id="inactivity-countdown-box" style="background: rgba(250, 179, 135, 0.12); border: 2px dashed var(--warning); border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--warning); letter-spacing: 1.5px; margin-bottom: 6px;">Compte à rebours de déconnexion</div>
+        <div id="inactivity-countdown-display" style="font-family: 'JetBrains Mono', monospace; font-size: 46px; font-weight: 800; color: #fff; letter-spacing: 3px; text-shadow: 0 0 20px rgba(250, 179, 135, 0.5);">45:00</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">La session sera détruite et la base .cllpdb verrouillée.</div>
+      </div>
+
+      <div style="display: flex; gap: 14px; justify-content: center;">
+        <button type="button" class="btn btn-secondary" onclick="logout()" style="flex: 1; padding: 12px 18px;">
+          🚪 Déconnexion
+        </button>
+        <button type="button" class="btn btn-success" onclick="confirmUserPresence()" style="flex: 2; padding: 12px 18px; font-size: 14px;">
+          🟢 Je suis actif / Rester Connecté
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let sessionInterval = null;
     let categoriesMap = {};
@@ -1264,6 +1381,7 @@ function renderApplicationHtml(config: typeof currentAppConfig = currentAppConfi
     }
 
     function switchToDashboard(user, remainingSeconds) {
+      currentUser = user;
       document.getElementById('page-login').classList.remove('active');
       document.getElementById('page-dashboard').classList.add('active');
 
@@ -1276,6 +1394,7 @@ function renderApplicationHtml(config: typeof currentAppConfig = currentAppConfi
       document.getElementById('header-role').textContent = '(' + user.role + ')';
 
       startSessionCountdown(remainingSeconds);
+      startInactivityMonitor();
       loadCatalog();
     }
 
@@ -1355,17 +1474,204 @@ function renderApplicationHtml(config: typeof currentAppConfig = currentAppConfi
       }
     }
 
+    // ===================================================
+    // GESTIONNAIRE D'INACTIVITÉ (2 MIN IDLE -> 45 MIN COUNTDOWN)
+    // ===================================================
+    const IDLE_LIMIT_SEC = 2 * 60; // 2 minutes d'inactivité (120 secondes)
+    const COUNTDOWN_TOTAL_SEC = 45 * 60; // 45 minutes de compte à rebours (2700 secondes)
+
+    let lastActivityTime = Date.now();
+    let isInactivityWarningActive = false;
+    let countdownRemainingSec = COUNTDOWN_TOTAL_SEC;
+    let inactivityTimer = null;
+    let allProductsCache = [];
+
+    // Capture de toutes les interactions utilisateur pour la réinitialisation de l'inactivité
+    ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
+      window.addEventListener(evt, onUserInteraction, { passive: true });
+    });
+
+    function onUserInteraction() {
+      if (!isInactivityWarningActive) {
+        lastActivityTime = Date.now();
+      }
+    }
+
+    function startInactivityMonitor() {
+      clearInterval(inactivityTimer);
+      lastActivityTime = Date.now();
+      isInactivityWarningActive = false;
+      countdownRemainingSec = COUNTDOWN_TOTAL_SEC;
+      document.getElementById('modal-inactivity').style.display = 'none';
+      document.getElementById('header-inactivity').style.display = 'inline-flex';
+      document.getElementById('btn-test-idle').style.display = 'inline-flex';
+      updateInactivityWidget(false);
+
+      inactivityTimer = setInterval(() => {
+        if (!currentUser) return;
+
+        const idleSeconds = Math.floor((Date.now() - lastActivityTime) / 1000);
+
+        if (!isInactivityWarningActive) {
+          if (idleSeconds >= IDLE_LIMIT_SEC) {
+            triggerInactivityWarning();
+          } else {
+            const remain = Math.max(0, IDLE_LIMIT_SEC - idleSeconds);
+            const m = Math.floor(remain / 60);
+            const s = remain % 60;
+            const badge = document.getElementById('inactivity-text');
+            if (badge) badge.textContent = '🟢 Actif (' + (m > 0 ? m + 'm ' : '') + s + 's)';
+          }
+        } else {
+          countdownRemainingSec--;
+          updateCountdownModalDisplay(countdownRemainingSec);
+
+          if (countdownRemainingSec <= 0) {
+            clearInterval(inactivityTimer);
+            sessionExpiredByInactivity();
+          }
+        }
+      }, 1000);
+    }
+
+    function triggerInactivityWarning() {
+      isInactivityWarningActive = true;
+      countdownRemainingSec = COUNTDOWN_TOTAL_SEC;
+      updateCountdownModalDisplay(countdownRemainingSec);
+      document.getElementById('modal-inactivity').style.display = 'flex';
+      updateInactivityWidget(true);
+    }
+
+    function updateCountdownModalDisplay(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      const formatted = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      const disp = document.getElementById('inactivity-countdown-display');
+      if (disp) disp.textContent = formatted;
+      const badgeText = document.getElementById('inactivity-text');
+      if (badgeText) badgeText.textContent = '⏳ Inactif (' + formatted + ')';
+    }
+
+    function updateInactivityWidget(isWarning) {
+      const widget = document.getElementById('header-inactivity');
+      const dot = document.getElementById('inactivity-dot');
+      if (!widget || !dot) return;
+
+      if (isWarning) {
+        widget.classList.add('warning');
+        dot.style.background = 'var(--warning)';
+      } else {
+        widget.classList.remove('warning');
+        dot.style.background = 'var(--success)';
+      }
+    }
+
+    function confirmUserPresence() {
+      isInactivityWarningActive = false;
+      lastActivityTime = Date.now();
+      countdownRemainingSec = COUNTDOWN_TOTAL_SEC;
+      document.getElementById('modal-inactivity').style.display = 'none';
+      updateInactivityWidget(false);
+    }
+
+    function simulateInactivity() {
+      lastActivityTime = Date.now() - (IDLE_LIMIT_SEC * 1000 + 1000);
+    }
+
+    async function sessionExpiredByInactivity() {
+      document.getElementById('modal-inactivity').style.display = 'none';
+      await fetch('/api/logout', { method: 'POST' });
+      currentUser = null;
+      clearInterval(inactivityTimer);
+      clearInterval(sessionInterval);
+
+      document.getElementById('page-dashboard').classList.remove('active');
+      document.getElementById('page-login').classList.add('active');
+      document.getElementById('header-session').style.display = 'none';
+      document.getElementById('header-inactivity').style.display = 'none';
+      document.getElementById('header-user').style.display = 'none';
+      document.getElementById('btn-header-logout').style.display = 'none';
+      document.getElementById('btn-toggle-db').style.display = 'none';
+      document.getElementById('btn-test-idle').style.display = 'none';
+
+      const alertBox = document.getElementById('login-alert');
+      alertBox.className = 'alert alert-danger';
+      alertBox.textContent = "🔒 Session expirée pour cause d'inactivité (2 minutes d'inactivité continue + 45 minutes de compte à rebours écoulé). Vos données .cllpdb restent protégées.";
+      alertBox.style.display = 'block';
+    }
+
     async function logout() {
       clearInterval(sessionInterval);
+      clearInterval(inactivityTimer);
+      document.getElementById('modal-inactivity').style.display = 'none';
       await fetch('/api/logout', { method: 'POST' });
+      currentUser = null;
 
       document.getElementById('page-dashboard').classList.remove('active');
       document.getElementById('page-login').classList.add('active');
 
       document.getElementById('header-session').style.display = 'none';
+      document.getElementById('header-inactivity').style.display = 'none';
       document.getElementById('header-user').style.display = 'none';
       document.getElementById('btn-header-logout').style.display = 'none';
       document.getElementById('btn-toggle-db').style.display = 'none';
+      document.getElementById('btn-test-idle').style.display = 'none';
+    }
+
+    function filterProducts() {
+      const q = (document.getElementById('product-search').value || '').toLowerCase().trim();
+      const cat = document.getElementById('product-filter-cat').value;
+      const filtered = allProductsCache.filter(p => {
+        const matchName = p.name.toLowerCase().includes(q);
+        const matchCat = cat === 'all' || String(p.category_id) === String(cat);
+        return matchName && matchCat;
+      });
+      renderProductsGrid(filtered);
+    }
+
+    function renderProductsGrid(products) {
+      const grid = document.getElementById('catalog-grid');
+      grid.innerHTML = '';
+
+      if (products.length === 0) {
+        grid.innerHTML = \`
+          <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted); background: var(--card-alt); border-radius: 12px; border: 1px dashed var(--border);">
+            <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+            <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">Aucun produit correspondant</div>
+            <div style="font-size: 13px;">Modifiez votre recherche ou ajoutez un nouveau produit.</div>
+          </div>
+        \`;
+        return;
+      }
+
+      const iconMap = { 1: '💻', 2: '⌨️', 3: '🎧' };
+
+      products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        const icon = iconMap[p.category_id] || '📦';
+        const catName = categoriesMap[p.category_id] || 'Général';
+
+        card.innerHTML = \`
+          <div class="product-top">
+            <div class="product-icon">\${icon}</div>
+            <div>
+              <div class="product-name">\${p.name}</div>
+              <span class="product-category">\${catName}</span>
+            </div>
+          </div>
+          <div class="product-bottom">
+            <div>
+              <div class="product-price">\${Number(p.price).toFixed(2)} $</div>
+              <div class="product-stock">Stock disponible : <b>\${p.stock}</b></div>
+            </div>
+            <div class="product-actions">
+              <button class="btn-delete" onclick="deleteProduct(\${p.id})">🗑️ Supprimer</button>
+            </div>
+          </div>
+        \`;
+        grid.appendChild(card);
+      });
     }
 
     async function loadCatalog() {
@@ -1384,38 +1690,9 @@ function renderApplicationHtml(config: typeof currentAppConfig = currentAppConfi
         document.getElementById('kpi-val').textContent = '$' + Number(data.kpi.totalValue).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
         document.getElementById('kpi-cats').textContent = data.kpi.totalCategories + ' Catégories';
 
-        // Render products
-        const grid = document.getElementById('catalog-grid');
-        grid.innerHTML = '';
-
-        const iconMap = { 1: '💻', 2: '⌨️', 3: '🎧' };
-
-        data.products.forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'product-card';
-          const icon = iconMap[p.category_id] || '📦';
-          const catName = categoriesMap[p.category_id] || 'Général';
-
-          card.innerHTML = \`
-            <div class="product-top">
-              <div class="product-icon">\${icon}</div>
-              <div>
-                <div class="product-name">\${p.name}</div>
-                <span class="product-category">\${catName}</span>
-              </div>
-            </div>
-            <div class="product-bottom">
-              <div>
-                <div class="product-price">\${Number(p.price).toFixed(2)} $</div>
-                <div class="product-stock">Stock disponible : <b>\${p.stock}</b></div>
-              </div>
-              <div class="product-actions">
-                <button class="btn-delete" onclick="deleteProduct(\${p.id})">🗑️ Supprimer</button>
-              </div>
-            </div>
-          \`;
-          grid.appendChild(card);
-        });
+        // Cache and filter
+        allProductsCache = data.products || [];
+        filterProducts();
       } catch (err) {
         console.error('Erreur chargement catalogue :', err);
       }
