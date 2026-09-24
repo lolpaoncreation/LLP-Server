@@ -17,5 +17,14 @@ Thumbs.db
 dist_build/
 scratch/
 
-# VS Code Extension (desktop client, excluded from server repo)
+# VS Code Extension and editor settings
 vscode-extension/
+.vscode/
+
+# Local databases and sessions
+*.db
+data/
+app_config.txt
+
+# Windows batch files
+*.bat
