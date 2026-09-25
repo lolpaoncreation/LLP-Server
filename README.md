@@ -13,6 +13,30 @@ Welcome to the official documentation for the **LLP** programming language (*lol
 
 ---
 
+## 🌟 What's New in Version 1.6.0
+
+* 🖥️ **UI Builder Webview Engine 100% Validé & Thème Sombre Professionnel** :
+  * **Élimination définitive de l'écran blanc** : Résolution des erreurs de syntaxe JavaScript dans le moteur interne de la Webview (sécurisation du découpage de chaîne sans collision de caractères d'échappement, correction des apostrophes et des sauts de ligne).
+  * **Canevas Sombre Moderne** : Remplacement de l'ancien fond blanc aveuglant par un espace de travail sombre haute fidélité (`#11141f` avec bordures et ombres portées douces).
+  * **Glisser-Déposer Réactif & Fluide** : Ajout et réorganisation instantanée des composants depuis la palette avec placeholders magnétiques lumineux (`drop-ghost-placeholder`).
+  * **Analyse et Rendu Fidèle des `.illp`** : Chargement direct et hiérarchique de l'arborescence des éléments sans perte d'attributs.
+* 🎯 **Ciblage & Manipulation Complète des Éléments Graphiques en LLP** :
+  * Ciblage direct avec `UI.GetElement("MonElement")`, `UI.MonElement`, ou `UI["MonElement"]`.
+  * Modification dynamique des attributs avec synchronisation bidirectionnelle en temps réel (`txt`, `text`, `value`, `val`, `visible`, etc.).
+  * Événements réactifs natifs `OnClick()` et `OnChange()` avec exécution immédiate.
+* 🔄 **Architecture Client-Serveur Standardisée & Nouveau Template de Scaffolding** :
+  * Intégration du cycle complet dans les projets générés (`llp create MonProjet --client-server`) :
+    1. Interface graphique interactive `.illp` avec champs et validation.
+    2. Logique client `client/main.llp` avec récupération des données et validation locale.
+    3. Appel distant RPC transparent `RPC.Call("Auth.login", user, pass)`.
+    4. Traitement métier serveur sécurisé `server/main.llp` avec réponse structurée et mise à jour dynamique de l'UI.
+* 🛡️ **Optimisations Majeures du Runtime & de l'Interpréteur Serveur** :
+  * **Scope Confiné & Anti-Blocage** : Bornage strict de `findProjectRoot` pour éliminer tout scan intempestif du disque dur supérieur.
+  * **Surcharge et Redéfinition Propre** : `evalFunctionDeclaration` permet désormais de surcharger ou redéfinir des fonctions globales sans lever d'exception de collision de variable.
+  * **Isolation des Dossiers Internes** : Exclusion automatique des dossiers `.kilo`, `.git`, `dist_build`, `install` et `examples` du scope d'analyse du serveur.
+
+---
+
 ## 🌟 What's New in Version 1.5.9
 
 * 🎨 **Complete UI Text Modification Guide & Dynamic Data Binding**:

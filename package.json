@@ -1,6 +1,6 @@
 {
   "name": "llp-lang",
-  "version": "1.5.9",
+  "version": "1.6.0",
   "description": "LLP (lolpaon programming language) - Lightweight multi-system language with Roblox-like parent-child hierarchy and easy DB/File management.",
   "main": "dist/index.js",
   "bin": {

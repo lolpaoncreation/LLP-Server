@@ -506,11 +506,12 @@ ${convertIllpsToCss(illpsContent)}
             flex-direction: column;
             gap: 16px;
             position: relative;
-            background: #ffffff;
-            color: #0f172a;
-            border-radius: 8px;
+            background: #11141f;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             padding: 24px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
             transition: all 0.2s ease;
         }
 
@@ -1785,7 +1786,7 @@ UI.LabelStatus.txt = "Chargement..."
         // -------------------------------------------------------------
         function parseIllpToTree(code) {
             const list = [];
-            const lines = (code || '').split(/\r?\n/);
+            const lines = (code || '').split(String.fromCharCode(10));
             const stack = [];
 
             function getCurrentTarget() {
@@ -1891,7 +1892,7 @@ UI.LabelStatus.txt = "Chargement..."
                         id: mName ? mName[1] : 'Checkbox_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'Checkbox',
                         type: 'Checkbox',
-                        label: mLbl ? mLbl[1] : 'Activer l\'option',
+                        label: mLbl ? mLbl[1] : "Activer l'option",
                         checked: mChk ? mChk[1].toLowerCase() === 'true' : false
                     });
                     return;
@@ -2234,15 +2235,15 @@ UI.LabelStatus.txt = "Chargement..."
                 emptyNotice.className = 'empty-canvas-notice';
                 emptyNotice.style.padding = '60px 20px';
                 emptyNotice.style.textAlign = 'center';
-                emptyNotice.style.color = '#94a3b8';
-                emptyNotice.style.border = '2px dashed rgba(148, 163, 184, 0.3)';
-                emptyNotice.style.borderRadius = '8px';
+                emptyNotice.style.color = 'var(--text-muted)';
+                emptyNotice.style.border = '2px dashed rgba(255, 255, 255, 0.15)';
+                emptyNotice.style.borderRadius = '10px';
                 emptyNotice.style.margin = '40px auto';
-                emptyNotice.style.maxWidth = '450px';
+                emptyNotice.style.maxWidth = '480px';
                 emptyNotice.style.pointerEvents = 'none';
-                emptyNotice.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">📄</div>' +
-                    '<div style="font-weight:700;font-size:14px;margin-bottom:4px;color:#475569;">Page Blanche (Aucun élément)</div>' +
-                    '<div style="font-size:12px;color:#94a3b8;">Glissez-déposez des composants depuis la palette pour construire votre interface.</div>';
+                emptyNotice.innerHTML = '<div style="font-size:36px;margin-bottom:10px;">🎨</div>' +
+                    '<div style="font-weight:700;font-size:15px;margin-bottom:6px;color:var(--text-primary);">Votre Canevas est Prêt</div>' +
+                    '<div style="font-size:13px;color:var(--text-muted);">Glissez-déposez des composants depuis la palette de gauche pour construire votre interface.</div>';
                 artboardRoot.appendChild(emptyNotice);
             }
 
@@ -2492,7 +2493,7 @@ UI.LabelStatus.txt = "Chargement..."
                     } else {
                         imgBox.innerHTML = '<div style="font-size:28px;margin-bottom:6px;">🖼️</div>' +
                             '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);">' + (el.name || 'Composant Image') + '</div>' +
-                            '<div style="font-size:11px;color:var(--text-muted);">Spécifiez l\'URL de la source dans l\'inspecteur à droite</div>';
+                            '<div style="font-size:11px;color:var(--text-muted);">Configurez la source de l image dans le panneau de droite</div>';
                     }
                     wrapper.appendChild(imgBox);
                 } else if (el.type === 'Toast') {
@@ -2927,14 +2928,14 @@ UI.LabelStatus.txt = "Chargement..."
 
             if (el.type === 'Card' || el.type === 'Modal' || el.type === 'Drawer' || el.type === 'Header') {
                 specificHtml += '<div class="control-row">' +
-                    '<span class="control-label">Titre d\'En-tête:</span>' +
+                    '<span class="control-label">Titre En-tête:</span>' +
                     '<input type="text" class="prop-text-input" id="prop-elem-title" value="' + (el.title || '') + '" />' +
                     '</div>';
             }
 
             if (el.type === 'Toast') {
                 specificHtml += '<div class="control-row">' +
-                    '<span class="control-label">Message d\'Alerte:</span>' +
+                    '<span class="control-label">Message Alerte:</span>' +
                     '<input type="text" class="prop-text-input" id="prop-toast-msg" value="' + (el.message || '') + '" />' +
                     '</div>';
             }
@@ -3135,12 +3136,12 @@ UI.LabelStatus.txt = "Chargement..."
         };
 
         window.editEvent = function(eventName) {
-            const code = prompt('Modifier la logique d\'événement ' + eventName + ' :', '// Appelé lors du déclenchement de ' + eventName + '\nprint("' + eventName + ' exécuté");');
+            const code = prompt("Modifier la logique d'événement " + eventName + " :", "// Déclenché lors de l'événement " + eventName + String.fromCharCode(10) + 'print("' + eventName + ' exécuté");');
             if (code !== null) {
                 const found = selectedId ? findElementNode(elements, selectedId) : null;
                 if (found) {
                     found.item['event_' + eventName] = code;
-                    alert('✓ Gestionnaire d\'événement ' + eventName + ' enregistré !');
+                    alert("✓ Gestionnaire d'événement " + eventName + " enregistré !");
                 }
             }
         };
@@ -3171,7 +3172,7 @@ UI.LabelStatus.txt = "Chargement..."
 
         window.launchPublishProcess = function() {
             closeModal('modal-publish');
-            alert('🚀 [LLP Publish Engine]\n\nInterface ' + bgConfig.name + ' compilée avec succès !\n• Signature matérielle validée\n• Binaire prêt dans le répertoire dist/ de votre projet.');
+            alert("🚀 [LLP Publish Engine]" + String.fromCharCode(10) + String.fromCharCode(10) + "Interface " + bgConfig.name + " compilée avec succès !" + String.fromCharCode(10) + "• Signature matérielle validée" + String.fromCharCode(10) + "• Binaire prêt dans le répertoire dist/ de votre projet.");
         };
 
         window.copyExportedCode = function() {
@@ -3248,7 +3249,7 @@ UI.LabelStatus.txt = "Chargement..."
                 if (idx === 0) {
                     elementsPanel.style.display = 'flex';
                 } else if (idx === 1) {
-                    alert('🌳 [Arborescence des Composants]\n\nNombre d\'éléments actifs : ' + elements.length + '\nSélectionnez n\'importe quel élément pour afficher ses propriétés.');
+                    alert("🌳 [Arborescence des Composants]" + String.fromCharCode(10) + String.fromCharCode(10) + "Nombre d'éléments actifs : " + elements.length + String.fromCharCode(10) + "Sélectionnez un élément pour afficher ses propriétés.");
                 } else if (idx === 2) {
                     openModal('modal-api-docs');
                 } else if (idx === 3) {
@@ -3298,55 +3299,56 @@ UI.LabelStatus.txt = "Chargement..."
                 } else if (el.type === 'Chart') {
                     line = indent + 'Chart "' + name + '" title: "' + (el.title || '') + '" rpcSource: "' + (el.rpcSource || 'server.Analytics.metrics') + '"';
                 } else if (el.type === 'Card') {
-                    line = indent + 'Card "' + name + '" title: "' + (el.title || 'Section') + '" {\n';
+                    line = indent + 'Card "' + name + '" title: "' + (el.title || 'Section') + '" {' + String.fromCharCode(10);
                     line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else if (el.type === 'Modal') {
-                    line = indent + 'Modal "' + name + '" title: "' + (el.title || 'Modale') + '" {\n';
+                    line = indent + 'Modal "' + name + '" title: "' + (el.title || 'Modale') + '" {' + String.fromCharCode(10);
                     line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else if (el.type === 'Drawer') {
-                    line = indent + 'Drawer "' + name + '" title: "' + (el.title || 'Tiroir') + '" {\n';
+                    line = indent + 'Drawer "' + name + '" title: "' + (el.title || 'Tiroir') + '" {' + String.fromCharCode(10);
                     line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else if (el.type === 'Stack') {
-                    line = indent + 'Stack "' + name + '" direction: "' + (el.direction || 'horizontal') + '" gap: "' + (el.gap || '16px') + '" {\n';
+                    line = indent + 'Stack "' + name + '" direction: "' + (el.direction || 'horizontal') + '" gap: "' + (el.gap || '16px') + '" {' + String.fromCharCode(10);
                     line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else if (el.type === 'ResponsiveGrid') {
-                    line = indent + 'ResponsiveGrid "' + name + '" columns: ' + (el.columns || 12) + ' {\n';
+                    line = indent + 'ResponsiveGrid "' + name + '" columns: ' + (el.columns || 12) + ' {' + String.fromCharCode(10);
                     line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else if (el.type === 'Row') {
-                    line = indent + 'Row "' + name + '" {\n';
+                    line = indent + 'Row "' + name + '" {' + String.fromCharCode(10);
                     line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else {
                     line = indent + el.type + ' "' + name + '"';
                     if (el.children) {
-                        line += ' {\n' + stringifyElementTree(el.children, indent + '    ') + indent + '}';
+                        line += ' {' + String.fromCharCode(10) + stringifyElementTree(el.children, indent + '    ') + indent + '}';
                     }
                 }
 
-                str += line + '\n';
+                str += line + String.fromCharCode(10);
             });
             return str;
         }
 
         function generateFullIllpCode() {
-            let code = 'visibility: All\n\n';
-            code += '/* ===================================================\n';
-            code += '   LLP Interface (.illp) - Generated by LLP UI BUILDER\n';
-            code += '   Device Security & Dynamic RPC Layer Active\n';
-            code += '   =================================================== *\\\n\n';
+            const NL = String.fromCharCode(10);
+            let code = 'visibility: All' + NL + NL;
+            code += '/* ===================================================' + NL;
+            code += '   LLP Interface (.illp) - Generated by LLP UI BUILDER' + NL;
+            code += '   Device Security & Dynamic RPC Layer Active' + NL;
+            code += '   =================================================== */' + NL + NL;
 
             code += 'Background "' + bgConfig.name + '" responsive: ' + (bgConfig.responsive ? 'true' : 'false');
             if (bgConfig.minWidth) code += ' minWidth: "' + bgConfig.minWidth + '"';
             if (bgConfig.maxWidth) code += ' maxWidth: "' + bgConfig.maxWidth + '"';
-            code += ' {\n';
+            code += ' {' + NL;
 
             code += stringifyElementTree(elements, '    ');
-            code += '}\n';
+            code += '}' + NL;
 
             return code;
         }

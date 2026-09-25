@@ -144,7 +144,7 @@ function createProjectStructure(options) {
         // A. project.config
         const configContent = `[project]
 name = "${projectName}"
-version = "1.5.5"
+version = "1.6.0"
 architecture = "client-server"
 client_entry = "client/main.llp"
 server_entry = "server/main.llp"
@@ -370,7 +370,7 @@ llp builder client/views/main.illp
         // A. project.config
         const configContent = `[project]
 name = "${projectName}"
-version = "1.5.5"
+version = "1.6.0"
 architecture = "monolithic"
 entry = "src/main.llp"
 project_key = "${uniqueKey}"

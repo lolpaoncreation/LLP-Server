@@ -26,7 +26,7 @@ const args = process.argv.slice(2);
 function showHelp() {
   console.log(`
 ===================================================
- 🦚 LLP Language (lolpaon) - CLI & Tools v1.5
+ 🦚 LLP Language (lolpaon) - CLI & Tools v1.6.0
 ===================================================
 
 Usage :
@@ -70,7 +70,7 @@ if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
 }
 
 if (args[0] === "--version" || args[0] === "-v") {
-  console.log("🦚 LLP Language v1.5.6 (lolpaon)");
+  console.log("🦚 LLP Language v1.6.0 (lolpaon)");
   process.exit(0);
 }
 
