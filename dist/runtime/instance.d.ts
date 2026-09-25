@@ -23,6 +23,7 @@ export declare class Instance {
     private fireChildAdded;
     private fireChildRemoved;
     ToString(): string;
+    static onPropertyUpdated?: (instance: Instance, propName: string, value: RuntimeVal) => void;
     SetProperty(propName: string, val: RuntimeVal): void;
     GetProperty(propName: string): RuntimeVal;
 }

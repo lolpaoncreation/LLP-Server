@@ -38,6 +38,8 @@ exports.stopGuiApplication = stopGuiApplication;
 exports.setAppLock = setAppLock;
 exports.getAppConfig = getAppConfig;
 exports.startGuiApplication = startGuiApplication;
+exports.findProjectIllpFile = findProjectIllpFile;
+exports.parseIllpTree = parseIllpTree;
 const http = __importStar(require("http"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
@@ -80,8 +82,12 @@ function startGuiApplication(options = {}) {
             runBack: options.runBack || false
         };
         let projectDir = options.projectDir ? path.resolve(options.projectDir) : process.cwd();
-        // If executed from root llp dir, default to examples/product_management
-        if (!fs.existsSync(path.join(projectDir, "data", "products.cllpdb")) && fs.existsSync(path.join(projectDir, "examples", "product_management", "data", "products.cllpdb"))) {
+        // If executed from root llp dir without any project config or custom illp, default to examples/product_management
+        const hasLocalProject = fs.existsSync(path.join(projectDir, "project.config")) ||
+            fs.existsSync(path.join(projectDir, "client", "views", "main.illp")) ||
+            fs.existsSync(path.join(projectDir, "views", "main.illp")) ||
+            fs.existsSync(path.join(projectDir, "main.illp"));
+        if (!hasLocalProject && !fs.existsSync(path.join(projectDir, "data", "products.cllpdb")) && fs.existsSync(path.join(projectDir, "examples", "product_management", "data", "products.cllpdb"))) {
             projectDir = path.join(projectDir, "examples", "product_management");
         }
         // Détection de la base de données du projet (.cllpdb)
@@ -349,6 +355,29 @@ function startGuiApplication(options = {}) {
                 }, 150);
                 return;
             }
+            // 8c. API: UI DYNAMIC REALTIME SYNC (Updates & Browser Events)
+            if (pathname === "/api/ui/updates" && req.method === "GET") {
+                try {
+                    const { UIElementManager } = require("../stdlib/ui_element");
+                    const updates = UIElementManager.getInstance().getAndClearPendingUpdates();
+                    return sendJson(200, { success: true, updates });
+                }
+                catch (_) {
+                    return sendJson(200, { success: true, updates: [] });
+                }
+            }
+            if (pathname === "/api/ui/event" && req.method === "POST") {
+                readJsonBody().then(body => {
+                    const { id, event, value } = body;
+                    try {
+                        const { UIElementManager } = require("../stdlib/ui_element");
+                        UIElementManager.getInstance().applyBrowserEvent(id, event, value);
+                    }
+                    catch (_) { }
+                    return sendJson(200, { success: true });
+                }).catch(err => sendJson(500, { success: false, message: err.message }));
+                return;
+            }
             // 8b. SERVE STATIC ASSETS & LOGOS
             if (pathname.startsWith("/assets/") || pathname === "/favicon.ico" || pathname === "/logo.png") {
                 const cleanPath = pathname.replace(/^\/assets\//, "");
@@ -368,49 +397,6 @@ function startGuiApplication(options = {}) {
                     }
                 }
             }
-            function findProjectIllpFile(projectDir) {
-                const candidates = [
-                    path.join(projectDir, "client", "views", "main.illp"),
-                    path.join(projectDir, "src", "views", "main.illp"),
-                    path.join(projectDir, "views", "main.illp"),
-                    path.join(projectDir, "interfaces", "main.illp"),
-                    path.join(projectDir, "main.illp")
-                ];
-                for (const c of candidates) {
-                    if (fs.existsSync(c)) {
-                        const s = c.replace(/\.illp$/, ".illps");
-                        return { illpPath: c, illpsPath: fs.existsSync(s) ? s : "" };
-                    }
-                }
-                return null;
-            }
-            function renderBlankInterfaceHtml(illpContent, illpsContent, title = "LLP Application") {
-                let bg = "#ffffff";
-                const bgMatch = illpsContent.match(/background\s*:\s*([^;\r\n]+)/i) || illpContent.match(/background\s*:\s*["']?([^"';\r\n]+)["']?/i);
-                if (bgMatch) {
-                    bg = bgMatch[1].trim();
-                }
-                return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      background: ${bg};
-      overflow: auto;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
-  </style>
-</head>
-<body>
-</body>
-</html>`;
-            }
             // 9. SERVE APPLICATION HTML & ASSETS
             if (pathname === "/" || pathname === "/index.html") {
                 res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
@@ -418,7 +404,7 @@ function startGuiApplication(options = {}) {
                 if (customIllp && !fs.existsSync(path.join(projectDir, "interfaces", "dashboard.illp"))) {
                     const illpContent = fs.readFileSync(customIllp.illpPath, "utf-8");
                     const illpsContent = customIllp.illpsPath && fs.existsSync(customIllp.illpsPath) ? fs.readFileSync(customIllp.illpsPath, "utf-8") : "";
-                    res.end(renderBlankInterfaceHtml(illpContent, illpsContent, path.basename(projectDir)));
+                    res.end(renderIllpInterfaceHtml(illpContent, illpsContent, path.basename(projectDir)));
                 }
                 else {
                     res.end(renderApplicationHtml(exports.currentAppConfig));
@@ -435,42 +421,500 @@ function startGuiApplication(options = {}) {
             res.writeHead(404, { "Content-Type": "text/plain" });
             res.end("Not Found");
         });
-        server.listen(port, "127.0.0.1", () => {
-            exports.currentServerInstance = server;
-            const url = `http://127.0.0.1:${port}`;
-            console.log(`\n===================================================`);
-            console.log(`   LLP Interactive GUI - Lolpaon Pro Application`);
-            console.log(`===================================================`);
-            console.log(`✓ Serveur d'application démarré sur : ${url}`);
-            console.log(`✓ Base chiffrée connectée : ${db && fs.existsSync(dbPath) ? path.basename(dbPath) : "Aucune (Mode Interface Pure)"}`);
-            console.log(`✓ Résolution fenêtre (App.Launch) : ${exports.currentAppConfig.windowWidth}x${exports.currentAppConfig.windowHeight} px`);
-            console.log(`✓ Mode développeur (DevMode)      : ${exports.currentAppConfig.devMode ? "Activé (Outils & Tests)" : "Désactivé"}`);
-            console.log(`✓ Verrouillage taille (App.Lock)  : ${exports.currentAppConfig.locked ? "Oui (Taille fixe, aucun redimensionnement)" : "Non"}`);
-            console.log(`✓ Pages chargées : login.illp, dashboard.illp, ModalAddProduct`);
-            if (options.openBrowser !== false && !exports.currentAppConfig.silence) {
-                const width = exports.currentAppConfig.windowWidth;
-                const height = exports.currentAppConfig.windowHeight;
-                const devFlags = exports.currentAppConfig.devMode ? " --auto-open-devtools-for-tabs" : "";
-                // Try opening in standalone app window with Edge
-                (0, child_process_1.exec)(`start msedge --app=${url} --window-size=${width},${height}${devFlags}`, (err) => {
-                    if (err) {
-                        // Fallback to default browser
-                        (0, child_process_1.exec)(`start ${url}`);
-                    }
-                });
-            }
-            else if (exports.currentAppConfig.silence) {
-                console.log(`✓ Mode Silence : En arrière-plan sans interface (RunBack: ${exports.currentAppConfig.runBack ? "Actif" : "Veille"}).`);
-                if (exports.currentAppConfig.runBack) {
-                    setInterval(() => { }, 60000);
+        function listenOnPort(targetPort, retries = 20) {
+            server.once("error", (err) => {
+                if (err.code === "EADDRINUSE" && retries > 0) {
+                    console.warn(`[LLP GUI] Port ${targetPort} en cours d'utilisation, tentative sur ${targetPort + 1}...`);
+                    listenOnPort(targetPort + 1, retries - 1);
                 }
-            }
-            resolve({ server, url, port });
-        });
-        server.on("error", (err) => {
-            reject(err);
-        });
+                else {
+                    reject(err);
+                }
+            });
+            server.listen(targetPort, "127.0.0.1", () => {
+                exports.currentServerInstance = server;
+                const actualPort = server.address()?.port || targetPort;
+                const url = `http://127.0.0.1:${actualPort}`;
+                console.log(`\n===================================================`);
+                console.log(`   LLP Interactive GUI - Lolpaon Pro Application`);
+                console.log(`===================================================`);
+                console.log(`✓ Serveur d'application démarré sur : ${url}`);
+                console.log(`✓ Base chiffrée connectée : ${db && fs.existsSync(dbPath) ? path.basename(dbPath) : "Aucune (Mode Interface Pure)"}`);
+                console.log(`✓ Résolution fenêtre (App.Launch) : ${exports.currentAppConfig.windowWidth}x${exports.currentAppConfig.windowHeight} px`);
+                console.log(`✓ Mode développeur (DevMode)      : ${exports.currentAppConfig.devMode ? "Activé (Outils & Tests)" : "Désactivé"}`);
+                console.log(`✓ Verrouillage taille (App.Lock)  : ${exports.currentAppConfig.locked ? "Oui (Taille fixe, aucun redimensionnement)" : "Non"}`);
+                console.log(`✓ Interface chargée               : ${findProjectIllpFile(projectDir)?.illpPath || "dashboard.illp"}`);
+                if (options.openBrowser !== false && !exports.currentAppConfig.silence) {
+                    const width = exports.currentAppConfig.windowWidth;
+                    const height = exports.currentAppConfig.windowHeight;
+                    const devFlags = exports.currentAppConfig.devMode ? " --auto-open-devtools-for-tabs" : "";
+                    // Try opening in standalone app window with Edge
+                    (0, child_process_1.exec)(`start msedge --app=${url} --window-size=${width},${height}${devFlags}`, (err) => {
+                        if (err) {
+                            // Fallback to default browser
+                            (0, child_process_1.exec)(`start ${url}`);
+                        }
+                    });
+                }
+                else if (exports.currentAppConfig.silence) {
+                    console.log(`✓ Mode Silence : En arrière-plan sans interface (RunBack: ${exports.currentAppConfig.runBack ? "Actif" : "Veille"}).`);
+                    if (exports.currentAppConfig.runBack) {
+                        setInterval(() => { }, 60000);
+                    }
+                }
+                resolve({ server, url, port: actualPort });
+            });
+        }
+        listenOnPort(port);
     });
+}
+function findProjectIllpFile(projectDir) {
+    const candidates = [
+        path.join(projectDir, "client", "views", "main.illp"),
+        path.join(projectDir, "views", "main.illp"),
+        path.join(projectDir, "src", "views", "main.illp"),
+        path.join(projectDir, "interfaces", "main.illp"),
+        path.join(projectDir, "main.illp"),
+        path.join(projectDir, "client", "main.illp"),
+        path.join(projectDir, "examples", "main_window.illp")
+    ];
+    for (const c of candidates) {
+        if (fs.existsSync(c)) {
+            const s = c.replace(/\.illp$/, ".illps");
+            return { illpPath: c, illpsPath: fs.existsSync(s) ? s : "" };
+        }
+    }
+    return null;
+}
+function parseIllpTree(code) {
+    // Strip block comments /* ... */ and /- ... -/
+    const strippedCode = (code || "")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\/-[\s\S]*?-\//g, "");
+    const root = {
+        type: "Root",
+        name: "root",
+        props: {},
+        children: []
+    };
+    const stack = [root];
+    const lines = strippedCode.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+        const rawLine = lines[i];
+        const tr = rawLine.trim();
+        if (!tr || tr.startsWith("//") || tr.startsWith("visibility:")) {
+            continue;
+        }
+        if (tr === "}") {
+            if (stack.length > 1)
+                stack.pop();
+            continue;
+        }
+        const isBlock = tr.endsWith("{");
+        const cleanLine = isBlock ? tr.slice(0, -1).trim() : tr;
+        const headMatch = cleanLine.match(/^([A-Za-z0-9_]+)(?:\s+["']([^"']+)["'])?(.*)$/);
+        if (!headMatch)
+            continue;
+        const tag = headMatch[1];
+        const name = headMatch[2] || tag;
+        const rest = headMatch[3] || "";
+        const props = {};
+        const propRegex = /([a-zA-Z0-9_]+)\s*:\s*(?:\[(.*?)\]|"([^"]*)"|'([^']*)'|([^\s,"']+))/g;
+        let pm;
+        while ((pm = propRegex.exec(rest)) !== null) {
+            const key = pm[1];
+            const val = pm[2] !== undefined ? pm[2] : (pm[3] !== undefined ? pm[3] : (pm[4] !== undefined ? pm[4] : pm[5]));
+            props[key] = val;
+        }
+        const node = { type: tag, name, props, children: [] };
+        const currentParent = stack[stack.length - 1];
+        currentParent.children.push(node);
+        if (isBlock) {
+            stack.push(node);
+        }
+    }
+    return root.children;
+}
+function transformIllpsToCss(illps) {
+    let css = (illps || "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/-[\s\S]*?-\//g, "");
+    // Replace Tag#Id with .Tag#Id, #Id (avoid matching hex colors)
+    css = css.replace(/(^|[,\s{}])([A-Za-z_][A-Za-z0-9_]*)#([A-Za-z_][A-Za-z0-9_-]*)/g, (full, prefix, tag, id) => {
+        return `${prefix}.${tag}#${id}, #${id}`;
+    });
+    // Replace Tag.Class with .Tag.Class, .Class (avoid matching decimal numbers)
+    css = css.replace(/(^|[,\s{}])([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_-]*)/g, (full, prefix, tag, cls) => {
+        return `${prefix}.${tag}.${cls}, .${cls}`;
+    });
+    return css;
+}
+function renderNodeToHtml(node) {
+    const { type, name, props, children } = node;
+    const childHtml = (children || []).map(renderNodeToHtml).join("\n");
+    switch (type) {
+        case "Background": {
+            const minW = props.minWidth ? `min-width: ${props.minWidth};` : "";
+            const maxW = props.maxWidth ? `max-width: ${props.maxWidth}; margin: 0 auto;` : "";
+            const minH = props.minHeight ? `min-height: ${props.minHeight};` : "";
+            return `<div class="illp-background Background" id="${name}" style="${minW} ${maxW} ${minH}">\n${childHtml}\n</div>`;
+        }
+        case "Card": {
+            const title = props.title;
+            return `<div class="illp-card Card" id="${name}">
+  ${title ? `<div class="illp-card-header"><h3 class="illp-card-title">${title}</h3></div>` : ""}
+  <div class="illp-card-body">${childHtml}</div>
+</div>`;
+        }
+        case "Row": {
+            const gap = props.gap ? `${props.gap}px` : "12px";
+            return `<div class="illp-row Row" id="${name}" style="gap: ${gap};">${childHtml}</div>`;
+        }
+        case "Column": {
+            const gap = props.gap ? `${props.gap}px` : "12px";
+            return `<div class="illp-column Column" id="${name}" style="gap: ${gap};">${childHtml}</div>`;
+        }
+        case "Grid": {
+            const cols = parseInt(props.columns || "3", 10);
+            const gap = props.gap ? `${props.gap}px` : "14px";
+            return `<div class="illp-grid Grid" id="${name}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr)); gap: ${gap};">${childHtml}</div>`;
+        }
+        case "Text": {
+            const content = props.content !== undefined ? props.content : name;
+            return `<div class="illp-text Text" id="${name}">${content}</div>`;
+        }
+        case "Button": {
+            const text = props.text !== undefined ? props.text : name;
+            const safeText = (text || "").replace(/'/g, "\\'");
+            return `<button class="illp-button Button" id="${name}" type="button" onclick="handleIllpClick('${name}', '${safeText}')">${text}</button>`;
+        }
+        case "TextInput": {
+            const ph = props.placeholder || "";
+            const def = props.default || props.value || "";
+            return `<input class="illp-input TextInput" id="${name}" type="text" placeholder="${ph}" value="${def}" />`;
+        }
+        case "ProgressBar": {
+            const val = parseFloat(props.value || "0");
+            const max = parseFloat(props.max || "100");
+            const pct = max > 0 ? Math.min(100, Math.max(0, (val / max) * 100)) : 0;
+            return `<div class="illp-progressbar-wrap ProgressBar" id="${name}">
+  <div class="illp-progressbar-bar" style="width: ${pct}%;"></div>
+</div>`;
+        }
+        case "ItemBox": {
+            let itemsList = [];
+            if (props.items) {
+                itemsList = props.items.split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+            }
+            const def = props.default || "";
+            return `<select class="illp-select ItemBox" id="${name}">
+  ${itemsList.map(opt => `<option value="${opt}" ${opt === def ? "selected" : ""}>${opt}</option>`).join("")}
+</select>`;
+        }
+        case "Checkbox": {
+            const label = props.label || name;
+            const checked = props.checked === "true" || props.checked === true;
+            return `<label class="illp-checkbox-label Checkbox" id="${name}">
+  <input type="checkbox" ${checked ? "checked" : ""} />
+  <span>${label}</span>
+</label>`;
+        }
+        case "Image": {
+            const src = props.src || "";
+            return `<img class="illp-image Image" id="${name}" src="${src}" alt="${name}" />`;
+        }
+        default: {
+            return `<div class="illp-generic ${type}" id="${name}">${childHtml}</div>`;
+        }
+    }
+}
+function renderIllpInterfaceHtml(illpContent, illpsContent, title = "LLP Application") {
+    const tree = parseIllpTree(illpContent);
+    const bodyHtml = tree.map(renderNodeToHtml).join("\n");
+    const userCss = transformIllpsToCss(illpsContent);
+    return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <link rel="icon" type="image/png" href="${logo_1.LLP_LOGO_BASE64}">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: #0f111a;
+      color: #cdd6f4;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Core Base Illp Styles */
+    .illp-background {
+      width: 100%;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+    .illp-card {
+      background: #181825;
+      border: 1px solid #313244;
+      border-radius: 14px;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .illp-card-header {
+      margin-bottom: 6px;
+    }
+
+    .illp-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #89b4fa;
+      letter-spacing: -0.2px;
+    }
+
+    .illp-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .illp-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .illp-column {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .illp-grid {
+      display: grid;
+      width: 100%;
+    }
+
+    .illp-text {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .illp-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 18px;
+      background: #89b4fa;
+      color: #11111b;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .illp-button:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .illp-button:active {
+      transform: translateY(1px);
+      filter: brightness(0.95);
+    }
+
+    .illp-input {
+      padding: 10px 14px;
+      background: #1e1e2e;
+      color: #ffffff;
+      border: 1px solid #45475a;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    .illp-input:focus {
+      border-color: #89b4fa;
+      box-shadow: 0 0 0 2px rgba(137, 180, 250, 0.2);
+    }
+
+    .illp-select {
+      padding: 10px 14px;
+      background: #1e1e2e;
+      color: #ffffff;
+      border: 1px solid #45475a;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .illp-progressbar-wrap {
+      width: 100%;
+      height: 10px;
+      background: #313244;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .illp-progressbar-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      border-radius: 9999px;
+      transition: width 0.3s ease;
+    }
+
+    .illp-checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    /* Toast notifications */
+    #illp-toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .illp-toast {
+      padding: 12px 20px;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border: 1px solid #89b4fa;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      animation: illpToastIn 0.25s ease forwards;
+    }
+    @keyframes illpToastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* User Custom Stylesheet (.illps) */
+    ${userCss}
+  </style>
+</head>
+<body>
+  ${bodyHtml}
+  <div id="illp-toast-container"></div>
+  <script>
+    function handleIllpClick(btnId, btnText) {
+      showToast("✓ " + btnText);
+      try {
+        fetch("/api/ui/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: btnId, event: "click", value: btnText })
+        }).catch(function() {});
+      } catch (_) {}
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById("illp-toast-container");
+      if (!container) return;
+      const toast = document.createElement("div");
+      toast.className = "illp-toast";
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease";
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Two-Way Data Binding: send input changes back to LLP runtime
+    document.addEventListener("input", function(e) {
+      var t = e.target;
+      if (t && t.id) {
+        var val = (t.type === "checkbox") ? t.checked : t.value;
+        fetch("/api/ui/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: t.id, event: "input", value: val })
+        }).catch(function() {});
+      }
+    });
+
+    document.addEventListener("change", function(e) {
+      var t = e.target;
+      if (t && t.id) {
+        var val = (t.type === "checkbox") ? t.checked : t.value;
+        fetch("/api/ui/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: t.id, event: "change", value: val })
+        }).catch(function() {});
+      }
+    });
+
+    // Real-Time Polling: receive text, value, and style updates from LLP backend
+    setInterval(function() {
+      fetch("/api/ui/updates")
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (res && res.updates && res.updates.length > 0) {
+            res.updates.forEach(function(u) {
+              var el = document.getElementById(u.id);
+              if (!el) return;
+              var p = (u.prop || "").toLowerCase();
+              if (p === "text" || p === "txt" || p === "content") {
+                if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+                  el.value = u.value;
+                } else if (el.classList.contains("illp-card")) {
+                  var t = el.querySelector(".illp-card-title");
+                  if (t) t.textContent = u.value;
+                } else {
+                  el.textContent = u.value;
+                }
+              } else if (p === "value" || p === "val") {
+                if (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") {
+                  if (el.type === "checkbox") el.checked = Boolean(u.value);
+                  else el.value = u.value;
+                } else if (el.classList.contains("illp-progressbar-wrap")) {
+                  var bar = el.querySelector(".illp-progressbar-bar");
+                  if (bar) bar.style.width = Math.min(100, Math.max(0, parseFloat(u.value) || 0)) + "%";
+                } else {
+                  el.setAttribute("data-value", u.value);
+                }
+              } else if (p === "visible" || p === "isvisible" || p === "hidden") {
+                el.style.display = (u.value === false || u.value === "false" || u.value === 0) ? "none" : "";
+              } else if (p === "placeholder" || p === "ph") {
+                if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") el.placeholder = u.value;
+              }
+            });
+          }
+        })
+        .catch(function() {});
+    }, 200);
+  </script>
+</body>
+</html>`;
 }
 function renderApplicationHtml(config = exports.currentAppConfig) {
     return `<!DOCTYPE html>

@@ -1,13 +1,13 @@
 {
   "name": "llp-lang",
-  "version": "1.5.4",
+  "version": "1.5.9",
   "description": "LLP (lolpaon programming language) - Lightweight multi-system language with Roblox-like parent-child hierarchy and easy DB/File management.",
   "main": "dist/index.js",
   "bin": {
     "llp": "bin/llp.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').cpSync('dist', 'vscode-extension/dist', { recursive: true })\"",
     "start": "tsc && node bin/llp.js",
     "test": "tsc && node bin/llp.js run examples/demo.llp"
   },

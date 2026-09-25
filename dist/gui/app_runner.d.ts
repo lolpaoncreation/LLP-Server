@@ -34,3 +34,8 @@ export declare function startGuiApplication(options?: GuiServerOptions): Promise
     url: string;
     port: number;
 }>;
+export declare function findProjectIllpFile(projectDir: string): {
+    illpPath: string;
+    illpsPath: string;
+} | null;
+export declare function parseIllpTree(code: string): any[];

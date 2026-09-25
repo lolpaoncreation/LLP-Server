@@ -49,7 +49,7 @@ Server.Post("/api/login", handleLogin)
 Server.Get("/api/data", handleData)
 
 // 4. Démarrage de l'écoute réseau
-var port = 8080
+Global port = 8080
 Server.Listen(port, "0.0.0.0")
 print("🌐 [Réseau] Serveur en écoute sur 0.0.0.0:" + port)
 print("🚀 Prêt à recevoir les requêtes des applications LLP clientes.")

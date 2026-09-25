@@ -4,12 +4,18 @@ exports.Lexer = void 0;
 const tokens_1 = require("./tokens");
 const KEYWORDS = {
     General: tokens_1.TokenType.KwGeneral,
-    Global: tokens_1.TokenType.KwGeneral,
+    Global: tokens_1.TokenType.KwGlobal,
     var: tokens_1.TokenType.KwGeneral,
     int: tokens_1.TokenType.KwInt,
     float: tokens_1.TokenType.KwFloat,
     string: tokens_1.TokenType.KwString,
     bool: tokens_1.TokenType.KwBool,
+    Json: tokens_1.TokenType.KwJson,
+    json: tokens_1.TokenType.KwJson,
+    Hexa: tokens_1.TokenType.KwHexa,
+    hexa: tokens_1.TokenType.KwHexa,
+    breakpoint: tokens_1.TokenType.KwBreakpoint,
+    Breakpoint: tokens_1.TokenType.KwBreakpoint,
     if: tokens_1.TokenType.KwIf,
     then: tokens_1.TokenType.KwThen,
     else: tokens_1.TokenType.KwElse,
@@ -34,7 +40,8 @@ const KEYWORDS = {
     visibility: tokens_1.TokenType.KwVisibility,
     class: tokens_1.TokenType.KwClass,
     module: tokens_1.TokenType.KwModule,
-    namespace: tokens_1.TokenType.KwNamespace
+    namespace: tokens_1.TokenType.KwNamespace,
+    over: tokens_1.TokenType.KwOver
 };
 class Lexer {
     source;
@@ -295,6 +302,11 @@ class Lexer {
     isDigit(char) {
         return char >= '0' && char <= '9';
     }
+    isHexDigit(char) {
+        return ((char >= '0' && char <= '9') ||
+            (char >= 'a' && char <= 'f') ||
+            (char >= 'A' && char <= 'F'));
+    }
     isAlpha(char) {
         return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char === '_';
     }
@@ -347,6 +359,23 @@ class Lexer {
         const startLine = this.line;
         const startCol = this.col;
         let numStr = "";
+        // Hexadecimal numbers: 0x... or 0X...
+        if (this.source[this.pos] === '0' && (this.peek() === 'x' || this.peek() === 'X')) {
+            numStr += this.source[this.pos]; // '0'
+            this.advance();
+            numStr += this.source[this.pos]; // 'x' or 'X'
+            this.advance();
+            while (this.pos < this.source.length && this.isHexDigit(this.source[this.pos])) {
+                numStr += this.source[this.pos];
+                this.advance();
+            }
+            return {
+                type: tokens_1.TokenType.Number,
+                value: numStr,
+                line: startLine,
+                column: startCol
+            };
+        }
         while (this.pos < this.source.length && this.isDigit(this.source[this.pos])) {
             numStr += this.source[this.pos];
             this.advance();

@@ -895,13 +895,29 @@ ${convertIllpsToCss(illpsContent)}
         /* ------------------------------------------------------------- */
         /* RIGHT PANEL: PROPERTIES INSPECTOR                             */
         /* ------------------------------------------------------------- */
+        /* ------------------------------------------------------------- */
+        /* RIGHT PANEL: PROPERTIES INSPECTOR                             */
+        /* ------------------------------------------------------------- */
         #properties-panel {
-            width: 320px;
+            width: 350px;
+            min-width: 290px;
+            max-width: 440px;
             background: var(--bg-panel);
             border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            height: 100%;
+            transition: all 0.2s ease;
+        }
+
+        #properties-panel.collapsed {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            overflow: hidden !important;
+            border-left: none !important;
+            padding: 0 !important;
         }
 
         .prop-panel-header {
@@ -963,9 +979,15 @@ ${convertIllpsToCss(illpsContent)}
 
         .control-row {
             display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 6px;
+        }
+
+        .control-row.horizontal {
+            flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
         }
 
         .control-label {
@@ -1028,6 +1050,7 @@ ${convertIllpsToCss(illpsContent)}
             font-size: 12px;
             color: #fff;
             outline: none;
+            box-sizing: border-box;
         }
 
         .prop-text-input:focus {
@@ -1088,6 +1111,111 @@ ${convertIllpsToCss(illpsContent)}
             color: var(--text-muted);
         }
 
+        /* Modal & Drawer overlays */
+        .builder-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .builder-modal-overlay.active {
+            display: flex;
+        }
+        .builder-modal-box {
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 620px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+        }
+        .builder-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .builder-modal-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .builder-modal-body {
+            padding: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .builder-modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Nav Dropdown Menus */
+        .nav-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 6px;
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 0;
+            min-width: 200px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        .nav-dropdown-menu.active {
+            display: flex;
+        }
+        .nav-dropdown-item {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.15s;
+        }
+        .nav-dropdown-item:hover {
+            background: #1e293b;
+            color: var(--accent-cyan);
+        }
+        .nav-dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            #elements-panel { width: 210px; }
+            #properties-panel { width: 300px; }
+            .topbar-center { display: none; }
+        }
+
         /* ------------------------------------------------------------- */
         /* PREVIEW MODE TOGGLE                                           */
         /* ------------------------------------------------------------- */
@@ -1116,9 +1244,34 @@ ${convertIllpsToCss(illpsContent)}
                 <span>LLP UI BUILDER</span>
             </div>
             <nav class="nav-menu-links">
-                <span class="nav-link" id="menu-file">File</span>
-                <span class="nav-link" id="menu-edit">Edit</span>
-                <span class="nav-link" id="menu-project">Project</span>
+                <div class="nav-dropdown-wrapper">
+                    <span class="nav-link" id="menu-file">Fichier ▾</span>
+                    <div class="nav-dropdown-menu" id="dropdown-file">
+                        <div class="nav-dropdown-item" id="opt-file-save"><span>💾</span> Enregistrer (.illp)</div>
+                        <div class="nav-dropdown-item" id="opt-file-preview"><span>👁️</span> Basculer Aperçu</div>
+                        <div class="nav-dropdown-divider"></div>
+                        <div class="nav-dropdown-item" id="opt-file-reload"><span>🔄</span> Recharger l'interface</div>
+                        <div class="nav-dropdown-item" id="opt-file-export"><span>📤</span> Voir le Code .illp</div>
+                    </div>
+                </div>
+                <div class="nav-dropdown-wrapper">
+                    <span class="nav-link" id="menu-edit">Édition ▾</span>
+                    <div class="nav-dropdown-menu" id="dropdown-edit">
+                        <div class="nav-dropdown-item" id="opt-edit-dup"><span>⧉</span> Dupliquer (Ctrl+D)</div>
+                        <div class="nav-dropdown-item" id="opt-edit-del"><span>🗑️</span> Supprimer (Suppr)</div>
+                        <div class="nav-dropdown-divider"></div>
+                        <div class="nav-dropdown-item" id="opt-edit-deselect"><span>❌</span> Tout désélectionner</div>
+                    </div>
+                </div>
+                <div class="nav-dropdown-wrapper">
+                    <span class="nav-link" id="menu-project">Projet ▾</span>
+                    <div class="nav-dropdown-menu" id="dropdown-project">
+                        <div class="nav-dropdown-item" id="opt-proj-settings"><span>⚙️</span> Paramètres Fenêtre</div>
+                        <div class="nav-dropdown-item" id="opt-proj-docs"><span>📖</span> Documentation API LLP</div>
+                        <div class="nav-dropdown-divider"></div>
+                        <div class="nav-dropdown-item" id="opt-proj-publish"><span>🚀</span> Publier & Compiler</div>
+                    </div>
+                </div>
             </nav>
         </div>
 
@@ -1173,14 +1326,14 @@ ${convertIllpsToCss(illpsContent)}
         <!-- LEFT PALETTE: ELEMENTS -->
         <aside id="elements-panel">
             <div class="panel-header-title">
-                <span>ELEMENTS</span>
-                <span style="color:var(--text-muted); cursor:pointer;">«</span>
+                <span>PALETTE D'ÉLÉMENTS</span>
+                <span id="btn-toggle-left-panel" style="color:var(--text-muted); cursor:pointer;" title="Réduire la palette">«</span>
             </div>
 
             <div class="palette-search-box">
                 <div class="search-input-wrap">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="palette-filter" placeholder="Search..." />
+                    <input type="text" id="palette-filter" placeholder="Filtrer éléments..." />
                 </div>
             </div>
 
@@ -1188,41 +1341,62 @@ ${convertIllpsToCss(illpsContent)}
                 <!-- Group 1: Structure -->
                 <div class="element-category">
                     <div class="category-header">
-                        <span>▾ Structure</span>
+                        <span>▾ Structure & Conteneurs</span>
                     </div>
                     <div class="category-grid">
                         <div class="palette-card" draggable="true" data-type="Stack">
                             <span class="palette-card-icon">☰</span>
-                            <span class="palette-card-label">Stack (H/V)</span>
+                            <span class="palette-card-label">Stack (Pile H/V)</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="ResponsiveGrid">
                             <span class="palette-card-icon">▦</span>
-                            <span class="palette-card-label">Grid (Adaptive)</span>
+                            <span class="palette-card-label">Grille Responsive</span>
+                        </div>
+                        <div class="palette-card" draggable="true" data-type="Row">
+                            <span class="palette-card-icon">↔️</span>
+                            <span class="palette-card-label">Ligne (Row)</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="Card">
                             <span class="palette-card-icon">🗂️</span>
-                            <span class="palette-card-label">Section</span>
+                            <span class="palette-card-label">Carte / Section</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="Drawer">
                             <span class="palette-card-icon">🗄️</span>
-                            <span class="palette-card-label">TabView</span>
+                            <span class="palette-card-label">Tiroir (Drawer)</span>
                         </div>
-                        <div class="palette-card" draggable="true" data-type="TreeView">
-                            <span class="palette-card-icon">🌳</span>
-                            <span class="palette-card-label">TreeView</span>
+                        <div class="palette-card" draggable="true" data-type="Modal">
+                            <span class="palette-card-icon">🗔</span>
+                            <span class="palette-card-label">Boîte Modale</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Group 2: Controls -->
+                <!-- Group 2: Texte & Typographie -->
                 <div class="element-category">
                     <div class="category-header">
-                        <span>▾ Controls</span>
+                        <span>▾ Texte & Typographie</span>
+                    </div>
+                    <div class="category-grid">
+                        <div class="palette-card" draggable="true" data-type="Text">
+                            <span class="palette-card-icon">🔤</span>
+                            <span class="palette-card-label">Texte / Label</span>
+                        </div>
+                        <div class="palette-card" draggable="true" data-type="Divider">
+                            <span class="palette-card-icon">➖</span>
+                            <span class="palette-card-label">Séparateur</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 3: Formulaires & Contrôles -->
+                <div class="element-category">
+                    <div class="category-header">
+                        <span>▾ Formulaires & Contrôles</span>
                     </div>
                     <div class="category-grid">
                         <div class="palette-card" draggable="true" data-type="Button">
                             <span class="palette-card-icon">🔘</span>
-                            <span class="palette-card-label">Button</span>
+                            <span class="palette-card-label">Bouton</span>
                             <div class="subchips-group">
                                 <span class="subchip">Primary</span>
                                 <span class="subchip">Outline</span>
@@ -1230,91 +1404,89 @@ ${convertIllpsToCss(illpsContent)}
                         </div>
                         <div class="palette-card" draggable="true" data-type="TextInput">
                             <span class="palette-card-icon">⌨️</span>
-                            <span class="palette-card-label">Input</span>
+                            <span class="palette-card-label">Champ Saisie</span>
+                        </div>
+                        <div class="palette-card" draggable="true" data-type="Checkbox">
+                            <span class="palette-card-icon">☑️</span>
+                            <span class="palette-card-label">Case à Cocher</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="ItemBox">
                             <span class="palette-card-icon">🔽</span>
-                            <span class="palette-card-label">Select</span>
+                            <span class="palette-card-label">Menu Déroulant</span>
                         </div>
-                        <div class="palette-card" draggable="true" data-type="TagPicker">
-                            <span class="palette-card-icon">🏷️</span>
-                            <span class="palette-card-label">Select (Multi-Tag)</span>
+                        <div class="palette-card" draggable="true" data-type="ListButton">
+                            <span class="palette-card-icon">📑</span>
+                            <span class="palette-card-label">Bouton Liste</span>
+                        </div>
+                        <div class="palette-card" draggable="true" data-type="ProgressBar">
+                            <span class="palette-card-icon">📊</span>
+                            <span class="palette-card-label">Progression</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="DatePicker">
                             <span class="palette-card-icon">📅</span>
-                            <span class="palette-card-label">DateTimePicker</span>
+                            <span class="palette-card-label">Sélecteur Date</span>
+                        </div>
+                        <div class="palette-card" draggable="true" data-type="TagPicker">
+                            <span class="palette-card-icon">🏷️</span>
+                            <span class="palette-card-label">Multi-Tags</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="FileUpload">
                             <span class="palette-card-icon">☁️</span>
-                            <span class="palette-card-label">FileUpload</span>
+                            <span class="palette-card-label">Fichier Upload</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Group 3: Data Vistas -->
+                <!-- Group 4: Données & Vues -->
                 <div class="element-category">
                     <div class="category-header">
-                        <span>▾ Data Vistas</span>
+                        <span>▾ Données & Vues</span>
                     </div>
                     <div class="category-grid">
-                        <div class="palette-card selected-element" draggable="true" data-type="DataGrid">
+                        <div class="palette-card" draggable="true" data-type="DataGrid">
                             <span class="palette-card-icon">🗃️</span>
-                            <span class="palette-card-label">DataGrid (Paginating)</span>
+                            <span class="palette-card-label">Tableau (DataGrid)</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="Kanban">
                             <span class="palette-card-icon">📋</span>
-                            <span class="palette-card-label">KanbanBoard</span>
+                            <span class="palette-card-label">Tableau Kanban</span>
+                        </div>
+                        <div class="palette-card" draggable="true" data-type="TreeView">
+                            <span class="palette-card-icon">🌳</span>
+                            <span class="palette-card-label">Arborescence</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="Chart">
                             <span class="palette-card-icon">📈</span>
-                            <span class="palette-card-label">Chart</span>
-                            <div class="subchips-group">
-                                <span class="subchip">Pie</span>
-                                <span class="subchip">Bar</span>
-                                <span class="subchip">Line</span>
-                            </div>
+                            <span class="palette-card-label">Graphique (Chart)</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Group 4: Feedback -->
+                <!-- Group 5: Médias & Visuels -->
                 <div class="element-category">
                     <div class="category-header">
-                        <span>▾ Feedback</span>
+                        <span>▾ Médias & Visuels</span>
                     </div>
                     <div class="category-grid">
+                        <div class="palette-card" draggable="true" data-type="Image">
+                            <span class="palette-card-icon">🖼️</span>
+                            <span class="palette-card-label">Image</span>
+                        </div>
                         <div class="palette-card" draggable="true" data-type="Toast">
                             <span class="palette-card-icon">🔔</span>
-                            <span class="palette-card-label">Toast</span>
-                        </div>
-                        <div class="palette-card" draggable="true" data-type="Text">
-                            <span class="palette-card-icon">📢</span>
-                            <span class="palette-card-label">Banner</span>
-                        </div>
-                        <div class="palette-card" draggable="true" data-type="Modal">
-                            <span class="palette-card-icon">🗔</span>
-                            <span class="palette-card-label">Modal Dialog</span>
+                            <span class="palette-card-label">Notification Toast</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="Skeleton">
                             <span class="palette-card-icon">⌛</span>
-                            <span class="palette-card-label">SkeletonLoader</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Group 5: Advanced -->
-                <div class="element-category">
-                    <div class="category-header">
-                        <span>▾ Advanced</span>
-                    </div>
-                    <div class="category-grid">
-                        <div class="palette-card" draggable="true" data-type="Webview">
-                            <span class="palette-card-icon">🌐</span>
-                            <span class="palette-card-label">Webview / Canvas</span>
+                            <span class="palette-card-label">Squelette (Loader)</span>
                         </div>
                         <div class="palette-card" draggable="true" data-type="MediaPlayer">
                             <span class="palette-card-icon">🎬</span>
-                            <span class="palette-card-label">Custom Component</span>
+                            <span class="palette-card-label">Lecteur Média</span>
+                        </div>
+                        <div class="palette-card" draggable="true" data-type="Webview">
+                            <span class="palette-card-icon">🌐</span>
+                            <span class="palette-card-label">Webview / Canvas</span>
                         </div>
                     </div>
                 </div>
@@ -1324,8 +1496,8 @@ ${convertIllpsToCss(illpsContent)}
         <!-- CENTER CANVAS -->
         <main id="canvas-viewport">
             <div class="canvas-top-tag">
-                <span>PROJECT: <b>LLP APP 1 - MAIN DASHBOARD</b> (${fileName})</span>
-                <span id="canvas-elements-counter">4 components</span>
+                <span>PROJET: <b>LLP APP - WORKSPACE</b> (${fileName})</span>
+                <span id="canvas-elements-counter">0 composants</span>
             </div>
 
             <div class="canvas-artboard" id="artboard-root">
@@ -1336,116 +1508,121 @@ ${convertIllpsToCss(illpsContent)}
         <!-- RIGHT PANEL: PROPERTIES -->
         <aside id="properties-panel">
             <div class="prop-panel-header">
-                <span class="prop-main-title" id="inspector-header-title">PROPERTIES - DataGrid</span>
-                <span style="font-size: 10px; color: var(--text-muted); cursor: pointer;" id="btn-deselect">✕</span>
+                <span class="prop-main-title" id="inspector-header-title">PROPRIÉTÉS DU COMPOSANT</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:11px; color:var(--text-muted); cursor:pointer; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color);" id="btn-deselect" title="Désélectionner">✕</span>
+                    <span style="font-size:12px; color:var(--text-muted); cursor:pointer; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color);" id="btn-collapse-right" title="Réduire l'inspecteur">»</span>
+                </div>
             </div>
 
-            <!-- Accordion 1: Layout -->
+            <!-- Accordion 1: Specific Properties (OPEN by default) -->
+            <div class="accordion-section">
+                <div class="accordion-toggle" onclick="toggleAccordion('specific')">
+                    <span>▾ Propriétés du Composant</span>
+                </div>
+                <div class="accordion-content" id="acc-specific">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Accordion 2: Layout -->
             <div class="accordion-section">
                 <div class="accordion-toggle" onclick="toggleAccordion('layout')">
-                    <span>▾ Layout</span>
+                    <span>▾ Disposition & Taille (Layout)</span>
                 </div>
-                <div class="accordion-content" id="acc-layout">
+                <div class="accordion-content collapsed" id="acc-layout">
                     <div class="control-row">
-                        <span class="control-label">Size</span>
+                        <span class="control-label">Mode Taille</span>
                         <div class="segmented-btn-group">
                             <button class="seg-btn active" type="button" onclick="setSizeMode('auto')">Auto</button>
-                            <button class="seg-btn" type="button" onclick="setSizeMode('fixed')">Fixed</button>
-                            <button class="seg-btn" type="button" onclick="setSizeMode('percent')">Percent</button>
+                            <button class="seg-btn" type="button" onclick="setSizeMode('fixed')">Fixe</button>
+                            <button class="seg-btn" type="button" onclick="setSizeMode('percent')">Pourcent</button>
                         </div>
                     </div>
 
                     <div class="control-row">
-                        <span class="control-label">Alignment</span>
+                        <span class="control-label">Alignement</span>
                         <div class="segmented-btn-group">
-                            <button class="seg-btn active" type="button" onclick="setAlign('left')">⬱</button>
-                            <button class="seg-btn" type="button" onclick="setAlign('center')">⬰</button>
-                            <button class="seg-btn" type="button" onclick="setAlign('right')">⬲</button>
-                            <button class="seg-btn" type="button" onclick="setAlign('stretch')">⬍</button>
+                            <button class="seg-btn active" type="button" onclick="setAlign('left')">⬱ Gauche</button>
+                            <button class="seg-btn" type="button" onclick="setAlign('center')">⬰ Centre</button>
+                            <button class="seg-btn" type="button" onclick="setAlign('right')">⬲ Droite</button>
+                            <button class="seg-btn" type="button" onclick="setAlign('stretch')">⬍ Étirer</button>
                         </div>
                     </div>
 
                     <div class="control-row">
-                        <span class="control-label">Padding</span>
+                        <span class="control-label">Marges Internes (Padding)</span>
                         <div class="box-model-grid">
-                            <input type="text" id="prop-pad-top" placeholder="-" />
-                            <input type="text" id="prop-pad-right" placeholder="-" />
-                            <input type="text" id="prop-pad-bottom" placeholder="-" />
-                            <input type="text" id="prop-pad-left" placeholder="-" />
+                            <input type="text" id="prop-pad-top" placeholder="Haut" />
+                            <input type="text" id="prop-pad-right" placeholder="Drt" />
+                            <input type="text" id="prop-pad-bottom" placeholder="Bas" />
+                            <input type="text" id="prop-pad-left" placeholder="Gch" />
                         </div>
                     </div>
 
                     <div class="control-row">
-                        <span class="control-label">Margin</span>
+                        <span class="control-label">Marges Externes (Margin)</span>
                         <div class="box-model-grid">
-                            <input type="text" id="prop-mar-top" placeholder="-" />
-                            <input type="text" id="prop-mar-right" placeholder="-" />
-                            <input type="text" id="prop-mar-bottom" placeholder="-" />
-                            <input type="text" id="prop-mar-left" placeholder="-" />
-                        </div>
-                    </div>
-
-                    <div class="control-row">
-                        <span class="control-label">Responsive Rules</span>
-                        <div class="segmented-btn-group">
-                            <button class="seg-btn active" type="button" id="btn-rule-desk">Desktop</button>
-                            <button class="seg-btn" type="button" id="btn-rule-mob">Mobile</button>
+                            <input type="text" id="prop-mar-top" placeholder="Haut" />
+                            <input type="text" id="prop-mar-right" placeholder="Drt" />
+                            <input type="text" id="prop-mar-bottom" placeholder="Bas" />
+                            <input type="text" id="prop-mar-left" placeholder="Gch" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Accordion 2: Style -->
+            <!-- Accordion 3: Style -->
             <div class="accordion-section">
                 <div class="accordion-toggle" onclick="toggleAccordion('style')">
-                    <span>▾ Style</span>
+                    <span>▾ Apparence & Style</span>
                 </div>
-                <div class="accordion-content" id="acc-style">
+                <div class="accordion-content collapsed" id="acc-style">
                     <div class="control-row">
-                        <span class="control-label">Theme</span>
-                        <div class="segmented-btn-group">
-                            <button class="seg-btn" type="button">Light</button>
-                            <button class="seg-btn active" type="button">Dark</button>
-                            <button class="seg-btn" type="button">Custom</button>
-                        </div>
+                        <span class="control-label">Arrière-plan</span>
+                        <input type="text" class="prop-text-input" id="prop-style-bg" placeholder="#1e293b ou transparent" />
                     </div>
                     <div class="control-row">
-                        <span class="control-label">Borders</span>
+                        <span class="control-label">Bordure</span>
                         <input type="text" class="prop-text-input" id="prop-style-border" placeholder="1px solid #334155" />
                     </div>
                     <div class="control-row">
-                        <span class="control-label">Shadows</span>
+                        <span class="control-label">Arrondi (Border-radius)</span>
+                        <input type="text" class="prop-text-input" id="prop-style-radius" placeholder="8px" />
+                    </div>
+                    <div class="control-row">
+                        <span class="control-label">Ombre (Box Shadow)</span>
                         <input type="text" class="prop-text-input" id="prop-style-shadow" placeholder="0 4px 15px rgba(0,0,0,0.5)" />
                     </div>
                 </div>
             </div>
 
-            <!-- Accordion 3: Data Binding -->
+            <!-- Accordion 4: Data Binding -->
             <div class="accordion-section">
                 <div class="accordion-toggle" onclick="toggleAccordion('databinding')">
-                    <span>▾ Data Binding</span>
+                    <span>▾ Liaison de Données (Data Binding)</span>
                 </div>
-                <div class="accordion-content" id="acc-databinding">
+                <div class="accordion-content collapsed" id="acc-databinding">
                     <div class="data-binding-frame">
                         <div class="control-row" style="margin-bottom: 8px;">
-                            <span class="control-label">Data Source:</span>
-                            <select class="prop-text-input" id="prop-data-source" style="width: 140px;">
+                            <span class="control-label">Source de Données :</span>
+                            <select class="prop-text-input" id="prop-data-source">
                                 <option value="rpc">[LLP Server RPC]</option>
-                                <option value="state">Local State</option>
-                                <option value="json">Static JSON</option>
+                                <option value="state">État Local (State)</option>
+                                <option value="json">JSON Statique</option>
                             </select>
                         </div>
 
                         <div class="control-row" style="margin-bottom: 8px;">
-                            <span class="control-label">RPC Method:</span>
+                            <span class="control-label">Méthode RPC :</span>
                         </div>
                         <div class="rpc-bind-group" style="margin-bottom: 10px;">
                             <input type="text" class="prop-text-input" id="prop-rpc-method" value="server.Users.list" />
-                            <button class="btn-bind-action" type="button" id="btn-trigger-bind">Bind</button>
+                            <button class="btn-bind-action" type="button" id="btn-trigger-bind">Lier</button>
                         </div>
 
-                        <div class="control-row">
-                            <span class="control-label">Auto-Pagination <span title="Automatically requests paginated items from RPC" style="cursor:help;">?</span></span>
+                        <div class="control-row horizontal">
+                            <span class="control-label">Auto-Pagination</span>
                             <div class="toggle-switch-wrap">
                                 <input type="checkbox" id="prop-auto-page" class="switch-input" checked />
                             </div>
@@ -1454,45 +1631,110 @@ ${convertIllpsToCss(illpsContent)}
                 </div>
             </div>
 
-            <!-- Accordion 4: Events -->
+            <!-- Accordion 5: Events -->
             <div class="accordion-section">
                 <div class="accordion-toggle" onclick="toggleAccordion('events')">
-                    <span>▾ Events</span>
+                    <span>▾ Événements & Scripts LLP</span>
                 </div>
-                <div class="accordion-content" id="acc-events">
-                    <div class="event-code-line" onclick="editEvent('OnRowClick')">
-                        <span class="event-name">OnRowClick:</span>
-                        <span class="event-bracket">{}</span>
-                    </div>
-                    <div class="event-code-line" onclick="editEvent('OnCellEdit')">
-                        <span class="event-name">OnCellEdit:</span>
-                        <span class="event-bracket">{}</span>
-                    </div>
-                    <div class="event-code-line" onclick="editEvent('OnRowDelete')">
-                        <span class="event-name">OnRowDelete:</span>
-                        <span class="event-bracket">{}</span>
-                    </div>
-                    <div class="event-code-line" onclick="editEvent('OnSubmit')">
-                        <span class="event-name">OnSubmit:</span>
+                <div class="accordion-content collapsed" id="acc-events">
+                    <div class="event-code-line" onclick="editEvent('OnClick')">
+                        <span class="event-name">OnClick:</span>
                         <span class="event-bracket">{}</span>
                     </div>
                     <div class="event-code-line" onclick="editEvent('OnChange')">
                         <span class="event-name">OnChange:</span>
                         <span class="event-bracket">{}</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- Specific Properties Section -->
-            <div class="accordion-section">
-                <div class="accordion-toggle" onclick="toggleAccordion('specific')">
-                    <span>▾ Specific Component Properties</span>
-                </div>
-                <div class="accordion-content" id="acc-specific">
-                    <!-- Populated dynamically -->
+                    <div class="event-code-line" onclick="editEvent('OnSubmit')">
+                        <span class="event-name">OnSubmit:</span>
+                        <span class="event-bracket">{}</span>
+                    </div>
+                    <div class="event-code-line" onclick="editEvent('OnRowClick')">
+                        <span class="event-name">OnRowClick:</span>
+                        <span class="event-bracket">{}</span>
+                    </div>
                 </div>
             </div>
         </aside>
+    </div>
+
+    <!-- MODALS OVERLAY FOR PUBLISH, API DOCS & EXPORT ILLP -->
+    <div id="modal-publish" class="builder-modal-overlay">
+        <div class="builder-modal-box">
+            <div class="builder-modal-header">
+                <div class="builder-modal-title"><span>🚀</span> Publication & Déploiement Multi-Plateforme LLP</div>
+                <button class="top-btn" type="button" onclick="closeModal('modal-publish')">✕</button>
+            </div>
+            <div class="builder-modal-body">
+                <p style="margin-bottom: 12px;">Compilez votre interface <code>${fileName}</code> et vos scripts LLP en un livrable autonome avec signature d'identité matérielle Ed25519.</p>
+                <div style="background:#0b0f19; padding:14px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+                    <div style="font-weight:700; color:#fff; margin-bottom:8px;">Plateforme Cible :</div>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer;"><input type="radio" name="pub-target" value="win" checked /> 🪟 Windows Exécutable Standalone (.exe + WebView2)</label>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer;"><input type="radio" name="pub-target" value="linux" /> 🐧 Linux ELF Binaire Natif</label>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer;"><input type="radio" name="pub-target" value="web" /> 🌐 Webview Standalone (Client/Serveur RPC HTTP+WS)</label>
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="radio" name="pub-target" value="android" /> 📱 Android APK Hybride</label>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted); line-height:1.7;">
+                    <div>• Chiffrement RPC : <b style="color:var(--accent-cyan);">AES-256-GCM actif</b></div>
+                    <div>• Empreinte Matérielle : <code>${deviceId.substring(0, 32)}...</code></div>
+                </div>
+            </div>
+            <div class="builder-modal-footer">
+                <button class="top-btn" type="button" onclick="closeModal('modal-publish')">Fermer</button>
+                <button class="top-btn publish-btn" type="button" onclick="launchPublishProcess()">🚀 Lancer la Compilation</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-api-docs" class="builder-modal-overlay">
+        <div class="builder-modal-box" style="max-width: 720px;">
+            <div class="builder-modal-header">
+                <div class="builder-modal-title"><span>📖</span> Documentation de l'API Graphique LLP</div>
+                <button class="top-btn" type="button" onclick="closeModal('modal-api-docs')">✕</button>
+            </div>
+            <div class="builder-modal-body" style="max-height: 65vh; overflow-y: auto;">
+                <h4 style="color:#00e5ff; margin-bottom: 6px;">1. Ciblage d'Éléments Graphiques (.llp)</h4>
+                <p style="margin-bottom: 8px;">Depuis un script LLP, ciblez directement les éléments de l'interface :</p>
+                <pre style="background:#0b0f19; padding:10px; border-radius:6px; font-family:monospace; color:#38bdf8; margin-bottom:12px; font-size:12px;">
+var btn = UI.GetElement("BtnSubmit")
+// ou accès direct par propriété / crochet :
+UI["BtnSubmit"].txt = "Envoyer"
+UI.LabelStatus.txt = "Chargement..."
+                </pre>
+                <h4 style="color:#00e5ff; margin-bottom: 6px;">2. Propriétés & Alias Supportés</h4>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:12px; border:1px solid var(--border-color);">
+                    <thead><tr style="background:#1e293b;"><th style="padding:6px; text-align:left;">Composant</th><th style="padding:6px; text-align:left;">Propriétés / Alias</th><th style="padding:6px; text-align:left;">Exemple LLP</th></tr></thead>
+                    <tbody>
+                        <tr><td style="padding:6px; border-top:1px solid #334155;"><b>Text / Label</b></td><td style="padding:6px; border-top:1px solid #334155;">txt, text, content</td><td style="padding:6px; border-top:1px solid #334155;"><code>UI.Title.txt = "Bonjour"</code></td></tr>
+                        <tr><td style="padding:6px; border-top:1px solid #334155;"><b>Button</b></td><td style="padding:6px; border-top:1px solid #334155;">txt, text, label</td><td style="padding:6px; border-top:1px solid #334155;"><code>UI.Btn.txt = "Valider"</code></td></tr>
+                        <tr><td style="padding:6px; border-top:1px solid #334155;"><b>TextInput</b></td><td style="padding:6px; border-top:1px solid #334155;">value, val, placeholder</td><td style="padding:6px; border-top:1px solid #334155;"><code>UI.InputUser.value = "Jean"</code></td></tr>
+                        <tr><td style="padding:6px; border-top:1px solid #334155;"><b>Checkbox</b></td><td style="padding:6px; border-top:1px solid #334155;">value, checked, txt</td><td style="padding:6px; border-top:1px solid #334155;"><code>UI.ChkOpt.value = true</code></td></tr>
+                        <tr><td style="padding:6px; border-top:1px solid #334155;"><b>ProgressBar</b></td><td style="padding:6px; border-top:1px solid #334155;">value, val, max</td><td style="padding:6px; border-top:1px solid #334155;"><code>UI.Progress.value = 75</code></td></tr>
+                        <tr><td style="padding:6px; border-top:1px solid #334155;"><b>Tous les Éléments</b></td><td style="padding:6px; border-top:1px solid #334155;">visible (true/false)</td><td style="padding:6px; border-top:1px solid #334155;"><code>UI.Panel.visible = false</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="builder-modal-footer">
+                <button class="top-btn" type="button" onclick="closeModal('modal-api-docs')">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-export-illp" class="builder-modal-overlay">
+        <div class="builder-modal-box" style="max-width: 680px;">
+            <div class="builder-modal-header">
+                <div class="builder-modal-title"><span>📤</span> Code Source de l'Interface (.illp)</div>
+                <button class="top-btn" type="button" onclick="closeModal('modal-export-illp')">✕</button>
+            </div>
+            <div class="builder-modal-body">
+                <textarea id="exported-illp-code" readonly style="width:100%; height:280px; background:#0b0f19; border:1px solid var(--border-color); border-radius:6px; color:#38bdf8; font-family:monospace; font-size:12px; padding:10px; box-sizing:border-box; resize:vertical;"></textarea>
+            </div>
+            <div class="builder-modal-footer">
+                <button class="top-btn" type="button" onclick="copyExportedCode()">📋 Copier</button>
+                <button class="top-btn" type="button" onclick="closeModal('modal-export-illp')">Fermer</button>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- SCRIPT ENGINE -->
@@ -1536,19 +1778,14 @@ ${convertIllpsToCss(illpsContent)}
         let draggedFromPaletteType = null;
         const dropGhost = document.createElement('div');
         dropGhost.className = 'drop-ghost-placeholder';
-        dropGhost.innerHTML = \`
-            <div class="cursor-badge">
-                <span>👆</span>
-                <span id="ghost-tooltip-text">Drop component here to place or reorder</span>
-            </div>
-        \`;
+        dropGhost.innerHTML = '<div class="cursor-badge"><span>👆</span><span id="ghost-tooltip-text">Déposer le composant ici</span></div>';
 
         // -------------------------------------------------------------
         // PARSER: Converts .illp code into element tree
         // -------------------------------------------------------------
         function parseIllpToTree(code) {
             const list = [];
-            const lines = (code || '').split(/\\r?\\n/);
+            const lines = (code || '').split(/\r?\n/);
             const stack = [];
 
             function getCurrentTarget() {
@@ -1570,11 +1807,11 @@ ${convertIllpsToCss(illpsContent)}
 
                 // Background
                 if (tr.startsWith('Background')) {
-                    const m = tr.match(/^Background\\s+"([^"]+)"/i);
+                    const m = tr.match(/^Background\s+"([^"]+)"/i);
                     if (m) bgConfig.name = m[1];
-                    const minW = tr.match(/minWidth:\\s*"([^"]+)"/i);
+                    const minW = tr.match(/minWidth:\s*"([^"]+)"/i);
                     if (minW) bgConfig.minWidth = minW[1];
-                    const maxW = tr.match(/maxWidth:\\s*"([^"]+)"/i);
+                    const maxW = tr.match(/maxWidth:\s*"([^"]+)"/i);
                     if (maxW) bgConfig.maxWidth = maxW[1];
                     stack.push({ type: 'Background', name: bgConfig.name, children: list });
                     return;
@@ -1582,9 +1819,9 @@ ${convertIllpsToCss(illpsContent)}
 
                 // DataGrid
                 if (tr.startsWith('DataGrid')) {
-                    const mName = tr.match(/^DataGrid\\s+"([^"]+)"/);
-                    const mRpc = tr.match(/rpcSource:\\s*"([^"]+)"/);
-                    const mPage = tr.match(/pageSize:\\s*([0-9]+)/);
+                    const mName = tr.match(/^DataGrid\s+"([^"]+)"/);
+                    const mRpc = tr.match(/rpcSource:\s*"([^"]+)"/);
+                    const mPage = tr.match(/pageSize:\s*([0-9]+)/);
                     const item = {
                         id: mName ? mName[1] : 'DataGrid_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'ActiveUserSessions',
@@ -1593,7 +1830,7 @@ ${convertIllpsToCss(illpsContent)}
                         rpcSource: mRpc ? mRpc[1] : 'server.Users.list',
                         pageSize: mPage ? parseInt(mPage[1], 10) : 25,
                         autoPagination: true,
-                        columns: ['Name', 'Email', 'User', 'Datetime', 'Actions']
+                        columns: ['Nom', 'Email', 'Rôle', 'Date', 'Actions']
                     };
                     getCurrentTarget().push(item);
                     return;
@@ -1601,15 +1838,15 @@ ${convertIllpsToCss(illpsContent)}
 
                 // Kanban
                 if (tr.startsWith('Kanban')) {
-                    const mName = tr.match(/^Kanban\\s+"([^"]+)"/);
-                    const mRpc = tr.match(/rpcSource:\\s*"([^"]+)"/);
+                    const mName = tr.match(/^Kanban\s+"([^"]+)"/);
+                    const mRpc = tr.match(/rpcSource:\s*"([^"]+)"/);
                     const item = {
                         id: mName ? mName[1] : 'Kanban_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'TaskPipeline',
                         type: 'Kanban',
                         title: 'Task Pipeline',
                         rpcSource: mRpc ? mRpc[1] : 'server.Tasks.list',
-                        columns: ['Task', 'Completed', 'Task']
+                        columns: ['À faire', 'En cours', 'Terminé']
                     };
                     getCurrentTarget().push(item);
                     return;
@@ -1617,40 +1854,133 @@ ${convertIllpsToCss(illpsContent)}
 
                 // Button
                 if (tr.startsWith('Button')) {
-                    const mName = tr.match(/^Button\\s+"([^"]+)"/);
-                    const mText = tr.match(/text:\\s*"([^"]+)"/);
+                    const mName = tr.match(/^Button\s+"([^"]+)"/);
+                    const mText = tr.match(/text:\s*"([^"]+)"/);
+                    const mVar = tr.match(/variant:\s*"([^"]+)"/);
                     getCurrentTarget().push({
                         id: mName ? mName[1] : 'Button_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'PrimaryButton',
                         type: 'Button',
-                        text: mText ? mText[1] : 'Primary Button',
-                        variant: 'primary'
+                        text: mText ? mText[1] : 'Bouton Action',
+                        variant: mVar ? mVar[1] : 'primary'
                     });
                     return;
                 }
 
                 // TextInput
                 if (tr.startsWith('TextInput')) {
-                    const mName = tr.match(/^TextInput\\s+"([^"]+)"/);
-                    const mPh = tr.match(/placeholder:\\s*"([^"]+)"/);
+                    const mName = tr.match(/^TextInput\s+"([^"]+)"/);
+                    const mPh = tr.match(/placeholder:\s*"([^"]+)"/);
+                    const mVal = tr.match(/value:\s*"([^"]+)"/);
                     getCurrentTarget().push({
                         id: mName ? mName[1] : 'Input_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'Input',
                         type: 'TextInput',
-                        placeholder: mPh ? mPh[1] : 'Input'
+                        placeholder: mPh ? mPh[1] : 'Saisir du texte...',
+                        value: mVal ? mVal[1] : ''
+                    });
+                    return;
+                }
+
+                // Checkbox
+                if (tr.startsWith('Checkbox')) {
+                    const mName = tr.match(/^Checkbox\s+"([^"]+)"/);
+                    const mLbl = tr.match(/label:\s*"([^"]+)"/);
+                    const mChk = tr.match(/checked:\s*(true|false)/i);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'Checkbox_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'Checkbox',
+                        type: 'Checkbox',
+                        label: mLbl ? mLbl[1] : 'Activer l\'option',
+                        checked: mChk ? mChk[1].toLowerCase() === 'true' : false
+                    });
+                    return;
+                }
+
+                // ProgressBar
+                if (tr.startsWith('ProgressBar')) {
+                    const mName = tr.match(/^ProgressBar\s+"([^"]+)"/);
+                    const mVal = tr.match(/value:\s*([0-9]+)/);
+                    const mMax = tr.match(/max:\s*([0-9]+)/);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'ProgressBar_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'ProgressBar',
+                        type: 'ProgressBar',
+                        value: mVal ? parseInt(mVal[1], 10) : 50,
+                        max: mMax ? parseInt(mMax[1], 10) : 100
+                    });
+                    return;
+                }
+
+                // ItemBox
+                if (tr.startsWith('ItemBox')) {
+                    const mName = tr.match(/^ItemBox\s+"([^"]+)"/);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'ItemBox_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'SelectMenu',
+                        type: 'ItemBox',
+                        options: ['Option 1', 'Option 2', 'Option 3'],
+                        selected: 'Option 1'
+                    });
+                    return;
+                }
+
+                // ListButton
+                if (tr.startsWith('ListButton')) {
+                    const mName = tr.match(/^ListButton\s+"([^"]+)"/);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'ListButton_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'ListButton',
+                        type: 'ListButton',
+                        items: ['Onglet 1', 'Onglet 2', 'Onglet 3'],
+                        selected: 'Onglet 1'
                     });
                     return;
                 }
 
                 // Card / Section
                 if (tr.startsWith('Card')) {
-                    const mName = tr.match(/^Card\\s+"([^"]+)"/);
-                    const mTitle = tr.match(/title:\\s*"([^"]+)"/);
+                    const mName = tr.match(/^Card\s+"([^"]+)"/);
+                    const mTitle = tr.match(/title:\s*"([^"]+)"/);
                     const item = {
                         id: mName ? mName[1] : 'Card_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'Section',
                         type: 'Card',
-                        title: mTitle ? mTitle[1] : 'Section Container',
+                        title: mTitle ? mTitle[1] : 'Conteneur Section',
+                        children: []
+                    };
+                    getCurrentTarget().push(item);
+                    if (tr.endsWith('{')) stack.push(item);
+                    return;
+                }
+
+                // Modal
+                if (tr.startsWith('Modal')) {
+                    const mName = tr.match(/^Modal\s+"([^"]+)"/);
+                    const mTitle = tr.match(/title:\s*"([^"]+)"/);
+                    const item = {
+                        id: mName ? mName[1] : 'Modal_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'ModalDialog',
+                        type: 'Modal',
+                        title: mTitle ? mTitle[1] : 'Boîte Modale',
+                        isVisible: true,
+                        children: []
+                    };
+                    getCurrentTarget().push(item);
+                    if (tr.endsWith('{')) stack.push(item);
+                    return;
+                }
+
+                // Drawer
+                if (tr.startsWith('Drawer')) {
+                    const mName = tr.match(/^Drawer\s+"([^"]+)"/);
+                    const mTitle = tr.match(/title:\s*"([^"]+)"/);
+                    const item = {
+                        id: mName ? mName[1] : 'Drawer_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'DrawerPanel',
+                        type: 'Drawer',
+                        title: mTitle ? mTitle[1] : 'Tiroir Latéral',
+                        position: 'right',
                         children: []
                     };
                     getCurrentTarget().push(item);
@@ -1660,9 +1990,9 @@ ${convertIllpsToCss(illpsContent)}
 
                 // Stack
                 if (tr.startsWith('Stack')) {
-                    const mName = tr.match(/^Stack\\s+"([^"]+)"/);
-                    const mDir = tr.match(/direction:\\s*"([^"]+)"/);
-                    const mGap = tr.match(/gap:\\s*"([^"]+)"/);
+                    const mName = tr.match(/^Stack\s+"([^"]+)"/);
+                    const mDir = tr.match(/direction:\s*"([^"]+)"/);
+                    const mGap = tr.match(/gap:\s*"([^"]+)"/);
                     const item = {
                         id: mName ? mName[1] : 'Stack_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'Stack_1',
@@ -1678,7 +2008,7 @@ ${convertIllpsToCss(illpsContent)}
 
                 // ResponsiveGrid
                 if (tr.startsWith('ResponsiveGrid') || tr.startsWith('Grid')) {
-                    const mName = tr.match(/^(?:ResponsiveGrid|Grid)\\s+"([^"]+)"/);
+                    const mName = tr.match(/^(?:ResponsiveGrid|Grid)\s+"([^"]+)"/);
                     const item = {
                         id: mName ? mName[1] : 'Grid_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'AdaptiveGrid',
@@ -1692,14 +2022,40 @@ ${convertIllpsToCss(illpsContent)}
                 }
 
                 // Text
-                if (tr.startsWith('Text ')) {
-                    const mName = tr.match(/^Text\\s+"([^"]+)"/);
-                    const mContent = tr.match(/content:\\s*"([^"]+)"/);
+                if (tr.startsWith('Text ') || tr.startsWith('Text"')) {
+                    const mName = tr.match(/^Text\s+"([^"]+)"/);
+                    const mContent = tr.match(/content:\s*"([^"]+)"/);
                     getCurrentTarget().push({
                         id: mName ? mName[1] : 'Text_' + Math.random().toString(36).substr(2, 5),
-                        name: mName ? mName[1] : 'Header',
+                        name: mName ? mName[1] : 'Label',
                         type: 'Text',
-                        content: mContent ? mContent[1] : 'Header'
+                        content: mContent ? mContent[1] : 'Texte descriptif'
+                    });
+                    return;
+                }
+
+                // Divider
+                if (tr.startsWith('Divider')) {
+                    const mName = tr.match(/^Divider\s+"([^"]+)"/);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'Divider_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'Divider',
+                        type: 'Divider',
+                        orientation: 'horizontal'
+                    });
+                    return;
+                }
+
+                // Toast
+                if (tr.startsWith('Toast')) {
+                    const mName = tr.match(/^Toast\s+"([^"]+)"/);
+                    const mMsg = tr.match(/message:\s*"([^"]+)"/);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'Toast_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'NotificationToast',
+                        type: 'Toast',
+                        message: mMsg ? mMsg[1] : 'Notification système active',
+                        toastType: 'info'
                     });
                     return;
                 }
@@ -1707,7 +2063,7 @@ ${convertIllpsToCss(illpsContent)}
                 // Row / Column
                 if (tr.startsWith('Row') || tr.startsWith('Column')) {
                     const isRow = tr.startsWith('Row');
-                    const mName = tr.match(/^(?:Row|Column)\\s+"([^"]+)"/);
+                    const mName = tr.match(/^(?:Row|Column)\s+"([^"]+)"/);
                     const item = {
                         id: mName ? mName[1] : (isRow ? 'Row_' : 'Col_') + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : (isRow ? 'Row' : 'Column'),
@@ -1721,8 +2077,8 @@ ${convertIllpsToCss(illpsContent)}
 
                 // Image
                 if (tr.startsWith('Image')) {
-                    const mName = tr.match(/^Image\\s+"([^"]+)"/);
-                    const mSrc = tr.match(/src:\\s*"([^"]+)"/);
+                    const mName = tr.match(/^Image\s+"([^"]+)"/);
+                    const mSrc = tr.match(/src:\s*"([^"]+)"/);
                     getCurrentTarget().push({
                         id: mName ? mName[1] : 'Image_' + Math.random().toString(36).substr(2, 5),
                         name: mName ? mName[1] : 'Image',
@@ -1732,8 +2088,23 @@ ${convertIllpsToCss(illpsContent)}
                     return;
                 }
 
+                // Chart
+                if (tr.startsWith('Chart')) {
+                    const mName = tr.match(/^Chart\s+"([^"]+)"/);
+                    const mTitle = tr.match(/title:\s*"([^"]+)"/);
+                    getCurrentTarget().push({
+                        id: mName ? mName[1] : 'Chart_' + Math.random().toString(36).substr(2, 5),
+                        name: mName ? mName[1] : 'AnalyticsChart',
+                        type: 'Chart',
+                        title: mTitle ? mTitle[1] : 'Métriques & Statistiques',
+                        chartType: 'bar',
+                        rpcSource: 'server.Analytics.metrics'
+                    });
+                    return;
+                }
+
                 // Fallback generic component
-                const mType = tr.match(/^([A-Za-z0-9_]+)\\s+"([^"]+)"/);
+                const mType = tr.match(/^([A-Za-z0-9_]+)\s+"([^"]+)"/);
                 if (mType) {
                     const type = mType[1];
                     const name = mType[2];
@@ -1752,10 +2123,11 @@ ${convertIllpsToCss(illpsContent)}
         }
 
         // Helper to find an element and its parent array in the tree
-        function findElementNode(list, id, parent = null) {
+        function findElementNode(list, id, parent) {
+            parent = parent || null;
             for (let i = 0; i < list.length; i++) {
                 if (list[i].id === id) {
-                    return { item: list[i], index: i, list, parent };
+                    return { item: list[i], index: i, list: list, parent: parent };
                 }
                 if (list[i].children && list[i].children.length > 0) {
                     const found = findElementNode(list[i].children, id, list[i]);
@@ -1768,25 +2140,38 @@ ${convertIllpsToCss(illpsContent)}
         // Factory for new components
         function createNewComponent(type) {
             const id = type + '_' + Math.random().toString(36).substr(2, 5);
-            let item = { id, name: id, type };
+            let item = { id: id, name: id, type: type };
 
             if (type === 'DataGrid') {
                 item.title = 'Active User Sessions';
                 item.rpcSource = 'server.Users.list';
                 item.pageSize = 25;
                 item.autoPagination = true;
-                item.columns = ['Name', 'Email', 'User', 'Datetime', 'Actions'];
+                item.columns = ['Nom', 'Email', 'Rôle', 'Date', 'Actions'];
             } else if (type === 'Kanban') {
                 item.title = 'Task Pipeline';
                 item.rpcSource = 'server.Tasks.list';
-                item.columns = ['Task', 'Completed', 'Task'];
+                item.columns = ['À faire', 'En cours', 'Terminé'];
             } else if (type === 'Button') {
-                item.text = 'Primary Button';
+                item.text = 'Bouton Action';
                 item.variant = 'primary';
             } else if (type === 'TextInput') {
-                item.placeholder = 'Input';
+                item.placeholder = 'Saisir une valeur...';
+                item.value = '';
+            } else if (type === 'Checkbox') {
+                item.label = 'Activer cette option';
+                item.checked = false;
+            } else if (type === 'ProgressBar') {
+                item.value = 65;
+                item.max = 100;
+            } else if (type === 'ItemBox') {
+                item.options = ['Option 1', 'Option 2', 'Option 3'];
+                item.selected = 'Option 1';
+            } else if (type === 'ListButton') {
+                item.items = ['Onglet 1', 'Onglet 2', 'Onglet 3'];
+                item.selected = 'Onglet 1';
             } else if (type === 'Card') {
-                item.title = 'Section Container';
+                item.title = 'Conteneur Section';
                 item.children = [];
             } else if (type === 'Stack') {
                 item.direction = 'horizontal';
@@ -1795,13 +2180,43 @@ ${convertIllpsToCss(illpsContent)}
             } else if (type === 'ResponsiveGrid') {
                 item.columns = 12;
                 item.children = [];
+            } else if (type === 'Row') {
+                item.children = [];
+            } else if (type === 'Modal') {
+                item.title = 'Boîte Modale';
+                item.isVisible = true;
+                item.children = [];
+            } else if (type === 'Drawer') {
+                item.title = 'Tiroir Latéral';
+                item.position = 'right';
+                item.children = [];
             } else if (type === 'Chart') {
-                item.title = 'Analytics Overview';
+                item.title = 'Métriques & Statistiques';
+                item.chartType = 'bar';
                 item.rpcSource = 'server.Analytics.metrics';
             } else if (type === 'Toast') {
-                item.message = 'Notification alert ready';
+                item.message = 'Notification prête';
+                item.toastType = 'info';
             } else if (type === 'Text') {
-                item.content = 'Header Title';
+                item.content = 'Nouveau texte descriptif';
+            } else if (type === 'Divider') {
+                item.orientation = 'horizontal';
+            } else if (type === 'Image') {
+                item.src = '';
+                item.alt = 'Illustration';
+            } else if (type === 'DatePicker') {
+                item.placeholder = 'Sélectionner une date...';
+            } else if (type === 'TagPicker') {
+                item.tags = ['Tag 1', 'Tag 2'];
+            } else if (type === 'FileUpload') {
+                item.accept = '*.*';
+            } else if (type === 'Skeleton') {
+                item.width = '100%';
+                item.height = '24px';
+            } else if (type === 'MediaPlayer') {
+                item.src = 'media.mp4';
+            } else if (type === 'Webview') {
+                item.url = 'https://example.com';
             }
 
             return item;
@@ -1825,11 +2240,9 @@ ${convertIllpsToCss(illpsContent)}
                 emptyNotice.style.margin = '40px auto';
                 emptyNotice.style.maxWidth = '450px';
                 emptyNotice.style.pointerEvents = 'none';
-                emptyNotice.innerHTML = \`
-                    <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
-                    <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #475569;">Page Blanche (Aucun élément)</div>
-                    <div style="font-size: 12px; color: #94a3b8;">Glissez-déposez des composants depuis la palette ou conservez la page vierge.</div>
-                \`;
+                emptyNotice.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">📄</div>' +
+                    '<div style="font-weight:700;font-size:14px;margin-bottom:4px;color:#475569;">Page Blanche (Aucun élément)</div>' +
+                    '<div style="font-size:12px;color:#94a3b8;">Glissez-déposez des composants depuis la palette pour construire votre interface.</div>';
                 artboardRoot.appendChild(emptyNotice);
             }
 
@@ -1839,7 +2252,7 @@ ${convertIllpsToCss(illpsContent)}
                 l.forEach(x => { count++; if (x.children) countNodes(x.children); });
             }
             countNodes(elements);
-            elementsCounter.textContent = count + ' component' + (count !== 1 ? 's' : '');
+            elementsCounter.textContent = count + ' composant' + (count > 1 ? 's' : '');
         }
 
         function renderElementsList(list, domParent) {
@@ -1849,11 +2262,11 @@ ${convertIllpsToCss(illpsContent)}
                 wrapper.setAttribute('data-id', el.id);
                 wrapper.draggable = !isPreviewMode;
 
-                // Selection badge at top left (matches screenshot: ▾ DataGrid)
+                // Selection badge at top left
                 if (el.id === selectedId && !isPreviewMode) {
                     const tagBadge = document.createElement('div');
                     tagBadge.className = 'selection-tag-badge';
-                    tagBadge.innerHTML = '▾ ' + (el.type || 'Element');
+                    tagBadge.innerHTML = '▾ ' + (el.type || 'Element') + ' <span style="opacity:0.7;">#' + (el.name || el.id) + '</span>';
                     wrapper.appendChild(tagBadge);
                 }
 
@@ -1866,7 +2279,7 @@ ${convertIllpsToCss(illpsContent)}
                     const dragBtn = document.createElement('button');
                     dragBtn.className = 'q-btn drag-handle';
                     dragBtn.innerHTML = '⠿';
-                    dragBtn.title = 'Drag to move this element';
+                    dragBtn.title = 'Glisser pour déplacer';
                     qBar.appendChild(dragBtn);
 
                     // Move Up
@@ -1874,7 +2287,7 @@ ${convertIllpsToCss(illpsContent)}
                         const upBtn = document.createElement('button');
                         upBtn.className = 'q-btn';
                         upBtn.innerHTML = '▲';
-                        upBtn.title = 'Move Up';
+                        upBtn.title = 'Monter';
                         upBtn.onclick = (e) => {
                             e.stopPropagation();
                             const tmp = list[index];
@@ -1891,7 +2304,7 @@ ${convertIllpsToCss(illpsContent)}
                         const downBtn = document.createElement('button');
                         downBtn.className = 'q-btn';
                         downBtn.innerHTML = '▼';
-                        downBtn.title = 'Move Down';
+                        downBtn.title = 'Descendre';
                         downBtn.onclick = (e) => {
                             e.stopPropagation();
                             const tmp = list[index];
@@ -1907,7 +2320,7 @@ ${convertIllpsToCss(illpsContent)}
                     const dupBtn = document.createElement('button');
                     dupBtn.className = 'q-btn';
                     dupBtn.innerHTML = '⧉';
-                    dupBtn.title = 'Duplicate (Ctrl+D)';
+                    dupBtn.title = 'Dupliquer (Ctrl+D)';
                     dupBtn.onclick = (e) => {
                         e.stopPropagation();
                         duplicateElement(el.id);
@@ -1918,7 +2331,7 @@ ${convertIllpsToCss(illpsContent)}
                     const delBtn = document.createElement('button');
                     delBtn.className = 'q-btn delete-btn';
                     delBtn.innerHTML = '✕';
-                    delBtn.title = 'Delete Element (Del)';
+                    delBtn.title = 'Supprimer (Suppr)';
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
                         deleteElement(el.id);
@@ -1947,10 +2360,9 @@ ${convertIllpsToCss(illpsContent)}
                     e.dataTransfer.effectAllowed = 'move';
                     wrapper.classList.add('is-dragging');
 
-                    // Set ghost tooltip text
                     const ghostText = document.getElementById('ghost-tooltip-text');
                     if (ghostText) {
-                        ghostText.textContent = 'Move ' + el.type + ' (' + el.name + ') to new position';
+                        ghostText.textContent = 'Déplacer ' + el.type + ' (' + el.name + ')';
                     }
                 });
 
@@ -1962,133 +2374,33 @@ ${convertIllpsToCss(illpsContent)}
                 });
 
                 // SPECIFIC COMPONENT VISUAL RENDERERS
-                if (el.type === 'Header') {
-                    const block = document.createElement('div');
-                    block.className = 'canvas-header-block';
-                    block.innerHTML = \`
-                        <div class="canvas-header-left">
-                            <span style="color:var(--accent-cyan);">◖</span>
-                            <span>\${el.title || 'Header'}</span>
-                        </div>
-                        <div class="canvas-header-right">
-                            <span>\${el.subtitle || 'Welcome, User'}</span>
-                            <div class="user-avatar-circle">👤</div>
-                        </div>
-                    \`;
-                    wrapper.appendChild(block);
-                } else if (el.type === 'DataGrid') {
-                    const dg = document.createElement('div');
-                    dg.className = 'canvas-datagrid-block';
-                    dg.innerHTML = \`
-                        <div class="datagrid-title-bar">
-                            <span>\${el.title || 'Active User Sessions'}</span>
-                            <span style="color:var(--text-muted); cursor:pointer;">⋮</span>
-                        </div>
-                        <table class="datagrid-table-custom">
-                            <thead>
-                                <tr>
-                                    <th style="width:36px;"><input type="checkbox" disabled /></th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>User</th>
-                                    <th>Datetime</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><input type="checkbox" disabled /></td>
-                                    <td><div class="row-skeleton-bar" style="width:70%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:85%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:60%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:75%;"></div></td>
-                                    <td><span style="color:var(--text-muted);">⋮</span></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="checkbox" disabled /></td>
-                                    <td><div class="row-skeleton-bar" style="width:65%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:90%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:55%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:70%;"></div></td>
-                                    <td><span style="color:var(--text-muted);">⋮</span></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="checkbox" disabled /></td>
-                                    <td><div class="row-skeleton-bar" style="width:80%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:75%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:65%;"></div></td>
-                                    <td><div class="row-skeleton-bar" style="width:80%;"></div></td>
-                                    <td><span style="color:var(--text-muted);">⋮</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="datagrid-footer">
-                            <span>Page 1 of 1</span>
-                            <span>&lt; 1 &gt;</span>
-                        </div>
-                    \`;
-                    wrapper.appendChild(dg);
-                } else if (el.type === 'Kanban') {
-                    const kb = document.createElement('div');
-                    kb.className = 'canvas-kanban-block';
-                    kb.innerHTML = \`
-                        <div class="kanban-title-bar">
-                            <span>\${el.title || 'Task Pipeline'}</span>
-                            <span style="color:var(--text-muted); cursor:pointer;">⋮</span>
-                        </div>
-                        <div class="kanban-cols-container">
-                            <div class="kanban-col-item">
-                                <div class="kanban-col-top">
-                                    <span>Task</span>
-                                    <span>⋮</span>
-                                </div>
-                                <div class="kanban-task-card emerald-tag">
-                                    <div class="row-skeleton-bar" style="width:80%;"></div>
-                                </div>
-                                <div class="kanban-task-card amber-tag">
-                                    <div class="row-skeleton-bar" style="width:60%;"></div>
-                                </div>
-                            </div>
-                            <div class="kanban-col-item">
-                                <div class="kanban-col-top">
-                                    <span>Completed</span>
-                                    <span>⋮</span>
-                                </div>
-                                <div class="kanban-task-card">
-                                    <div class="row-skeleton-bar" style="width:75%;"></div>
-                                </div>
-                            </div>
-                            <div class="kanban-col-item">
-                                <div class="kanban-col-top">
-                                    <span>Task</span>
-                                    <span>⋮</span>
-                                </div>
-                                <div class="kanban-task-card">
-                                    <div class="row-skeleton-bar" style="width:70%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    \`;
-                    wrapper.appendChild(kb);
-                } else if (el.type === 'TextInput') {
-                    const inp = document.createElement('div');
-                    inp.style.display = 'flex';
-                    inp.style.flexDirection = 'column';
-                    inp.style.gap = '6px';
-                    inp.innerHTML = \`
-                        <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">\${el.name || 'Input'}</span>
-                        <input class="canvas-input-field" type="text" placeholder="\${el.placeholder || 'Input'}" readonly />
-                    \`;
-                    wrapper.appendChild(inp);
+                if (el.type === 'Text') {
+                    const t = document.createElement('div');
+                    t.style.fontSize = el.fontSize || '15px';
+                    t.style.fontWeight = '600';
+                    t.style.color = el.color || 'var(--text-primary)';
+                    t.style.lineHeight = '1.5';
+                    t.textContent = el.content || 'Texte descriptif';
+                    t.contentEditable = !isPreviewMode;
+                    t.oninput = () => { el.content = t.textContent; };
+                    wrapper.appendChild(t);
                 } else if (el.type === 'Button') {
                     const btn = document.createElement('button');
                     btn.className = 'canvas-primary-btn';
                     btn.type = 'button';
-                    btn.textContent = el.text || 'Primary Button';
+                    btn.textContent = el.text || 'Bouton Action';
                     if (el.variant === 'outline') {
                         btn.style.background = 'transparent';
                         btn.style.border = '1px solid var(--accent-cyan)';
-                        btn.style.color = 'var(--accent-cyan)';
+                        btn.style.color = varColor('--accent-cyan', '#00e5ff');
+                    } else if (el.variant === 'danger') {
+                        btn.style.background = '#ef4444';
+                        btn.style.color = '#fff';
+                        btn.style.border = '1px solid #dc2626';
+                    } else if (el.variant === 'success') {
+                        btn.style.background = '#10b981';
+                        btn.style.color = '#fff';
+                        btn.style.border = '1px solid #059669';
                     } else if (el.variant === 'standard') {
                         btn.style.background = 'var(--bg-element)';
                         btn.style.color = '#fff';
@@ -2096,40 +2408,159 @@ ${convertIllpsToCss(illpsContent)}
                         btn.style.boxShadow = 'none';
                     }
                     wrapper.appendChild(btn);
-                } else if (el.type === 'Text') {
-                    const t = document.createElement('div');
-                    t.style.fontSize = '16px';
-                    t.style.fontWeight = 'bold';
-                    t.style.color = 'inherit';
-                    t.textContent = el.content || 'Header Title';
-                    t.contentEditable = !isPreviewMode;
-                    t.oninput = () => { el.content = t.textContent; };
-                    wrapper.appendChild(t);
+                } else if (el.type === 'TextInput') {
+                    const inpWrap = document.createElement('div');
+                    inpWrap.style.display = 'flex';
+                    inpWrap.style.flexDirection = 'column';
+                    inpWrap.style.gap = '6px';
+                    inpWrap.innerHTML = '<span style="font-size:11px;color:var(--text-secondary);font-weight:600;">' + (el.name || 'Champ Saisie') + '</span>' +
+                        '<input class="canvas-input-field" type="text" placeholder="' + (el.placeholder || 'Saisir du texte...') + '" value="' + (el.value || '') + '" readonly />';
+                    wrapper.appendChild(inpWrap);
+                } else if (el.type === 'Checkbox') {
+                    const chkWrap = document.createElement('div');
+                    chkWrap.style.display = 'flex';
+                    chkWrap.style.alignItems = 'center';
+                    chkWrap.style.gap = '10px';
+                    chkWrap.style.padding = '6px 0';
+                    chkWrap.innerHTML = '<input type="checkbox" ' + (el.checked ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--accent-cyan);cursor:pointer;" />' +
+                        '<span style="font-size:13px;color:var(--text-primary);cursor:pointer;">' + (el.label || 'Case à cocher') + '</span>';
+                    const chk = chkWrap.querySelector('input');
+                    if (chk) {
+                        chk.onchange = (e) => { el.checked = e.target.checked; };
+                    }
+                    wrapper.appendChild(chkWrap);
+                } else if (el.type === 'ProgressBar') {
+                    const val = el.value !== undefined ? el.value : 50;
+                    const max = el.max || 100;
+                    const pct = Math.min(100, Math.max(0, Math.round((val / max) * 100)));
+                    const progWrap = document.createElement('div');
+                    progWrap.style.display = 'flex';
+                    progWrap.style.flexDirection = 'column';
+                    progWrap.style.gap = '6px';
+                    progWrap.innerHTML = '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);">' +
+                        '<span>' + (el.name || 'Progression') + '</span>' +
+                        '<span style="font-weight:bold;color:var(--accent-cyan);">' + pct + '%</span>' +
+                        '</div>' +
+                        '<div style="width:100%;height:8px;background:#1e293b;border-radius:4px;overflow:hidden;border:1px solid var(--border-color);">' +
+                        '<div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg, #0070f3, #00e5ff);transition:width 0.3s;"></div>' +
+                        '</div>';
+                    wrapper.appendChild(progWrap);
+                } else if (el.type === 'ItemBox') {
+                    const opts = Array.isArray(el.options) ? el.options : ['Option 1', 'Option 2', 'Option 3'];
+                    const selWrap = document.createElement('div');
+                    selWrap.style.display = 'flex';
+                    selWrap.style.flexDirection = 'column';
+                    selWrap.style.gap = '6px';
+                    const optHtml = opts.map(o => '<option value="' + o + '" ' + (o === el.selected ? 'selected' : '') + '>' + o + '</option>').join('');
+                    selWrap.innerHTML = '<span style="font-size:11px;color:var(--text-secondary);font-weight:600;">' + (el.name || 'Menu Déroulant') + '</span>' +
+                        '<select class="canvas-input-field" style="cursor:pointer;">' + optHtml + '</select>';
+                    const sel = selWrap.querySelector('select');
+                    if (sel) {
+                        sel.onchange = (e) => { el.selected = e.target.value; };
+                    }
+                    wrapper.appendChild(selWrap);
+                } else if (el.type === 'ListButton') {
+                    const itms = Array.isArray(el.items) ? el.items : ['Onglet 1', 'Onglet 2', 'Onglet 3'];
+                    const lbWrap = document.createElement('div');
+                    lbWrap.style.display = 'inline-flex';
+                    lbWrap.style.gap = '4px';
+                    lbWrap.style.background = '#0d1322';
+                    lbWrap.style.padding = '4px';
+                    lbWrap.style.borderRadius = '8px';
+                    lbWrap.style.border = '1px solid var(--border-color)';
+                    lbWrap.innerHTML = itms.map((it, idx) => '<button type="button" class="seg-btn ' + (idx === 0 ? 'active' : '') + '" style="padding:6px 14px;font-size:12px;">' + it + '</button>').join('');
+                    wrapper.appendChild(lbWrap);
+                } else if (el.type === 'Divider') {
+                    const divEl = document.createElement('div');
+                    divEl.style.height = '1px';
+                    divEl.style.background = 'var(--border-color)';
+                    divEl.style.margin = '12px 0';
+                    wrapper.appendChild(divEl);
                 } else if (el.type === 'Image') {
                     const imgBox = document.createElement('div');
                     imgBox.style.display = 'flex';
                     imgBox.style.flexDirection = 'column';
                     imgBox.style.alignItems = 'center';
                     imgBox.style.justifyContent = 'center';
-                    imgBox.style.padding = '12px';
-                    imgBox.style.background = 'rgba(0,0,0,0.03)';
-                    imgBox.style.border = '1px dashed #cbd5e1';
-                    imgBox.style.borderRadius = '6px';
-                    imgBox.innerHTML = \`
-                        <div style="font-size: 24px; margin-bottom: 4px;">🖼️</div>
-                        <div style="font-size: 11px; color: #64748b;">\${el.src || el.name || 'Image'}</div>
-                    \`;
+                    imgBox.style.padding = '16px';
+                    imgBox.style.background = 'rgba(0,0,0,0.15)';
+                    imgBox.style.border = '1px dashed var(--border-color)';
+                    imgBox.style.borderRadius = '8px';
+                    if (el.src) {
+                        imgBox.innerHTML = '<img src="' + el.src + '" alt="' + (el.alt || 'Image') + '" style="max-width:100%;max-height:160px;border-radius:4px;" />' +
+                            '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' + (el.alt || el.name) + '</div>';
+                    } else {
+                        imgBox.innerHTML = '<div style="font-size:28px;margin-bottom:6px;">🖼️</div>' +
+                            '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);">' + (el.name || 'Composant Image') + '</div>' +
+                            '<div style="font-size:11px;color:var(--text-muted);">Spécifiez l\'URL de la source dans l\'inspecteur à droite</div>';
+                    }
                     wrapper.appendChild(imgBox);
-                } else if (el.type === 'Card' || el.type === 'Stack' || el.type === 'ResponsiveGrid' || el.type === 'Row' || el.type === 'Column' || el.type === 'Container') {
-                    // Container Box
+                } else if (el.type === 'Toast') {
+                    const toastBox = document.createElement('div');
+                    toastBox.style.display = 'flex';
+                    toastBox.style.alignItems = 'center';
+                    toastBox.style.gap = '10px';
+                    toastBox.style.padding = '10px 16px';
+                    toastBox.style.background = '#111827';
+                    toastBox.style.border = '1px solid var(--accent-cyan)';
+                    toastBox.style.borderRadius = '8px';
+                    toastBox.style.boxShadow = '0 4px 15px rgba(0, 229, 255, 0.2)';
+                    toastBox.innerHTML = '<span style="font-size:16px;">🔔</span>' +
+                        '<div style="font-size:12px;color:#fff;font-weight:500;">' + (el.message || 'Notification système prête') + '</div>';
+                    wrapper.appendChild(toastBox);
+                } else if (el.type === 'Chart') {
+                    const chartBox = document.createElement('div');
+                    chartBox.className = 'canvas-form-block';
+                    chartBox.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+                        '<span style="font-size:13px;font-weight:700;">📈 ' + (el.title || 'Analytics Overview') + '</span>' +
+                        '<span style="font-size:10px;color:var(--accent-cyan);text-transform:uppercase;">' + (el.chartType || 'Bar') + ' Chart</span>' +
+                        '</div>' +
+                        '<div style="display:flex;align-items:flex-end;gap:8px;height:80px;padding:6px 0;border-bottom:1px solid var(--border-color);">' +
+                        '<div style="flex:1;height:45%;background:rgba(0,112,243,0.7);border-radius:3px 3px 0 0;"></div>' +
+                        '<div style="flex:1;height:80%;background:rgba(0,229,255,0.7);border-radius:3px 3px 0 0;"></div>' +
+                        '<div style="flex:1;height:60%;background:rgba(0,112,243,0.7);border-radius:3px 3px 0 0;"></div>' +
+                        '<div style="flex:1;height:95%;background:rgba(0,229,255,0.7);border-radius:3px 3px 0 0;"></div>' +
+                        '<div style="flex:1;height:70%;background:rgba(0,112,243,0.7);border-radius:3px 3px 0 0;"></div>' +
+                        '</div>';
+                    wrapper.appendChild(chartBox);
+                } else if (el.type === 'DataGrid') {
+                    const dg = document.createElement('div');
+                    dg.className = 'canvas-datagrid-block';
+                    dg.innerHTML = '<div class="datagrid-title-bar">' +
+                        '<span>' + (el.title || 'Active User Sessions') + '</span>' +
+                        '<span style="color:var(--text-muted);cursor:pointer;">⋮</span>' +
+                        '</div>' +
+                        '<table class="datagrid-table-custom">' +
+                        '<thead><tr>' +
+                        '<th style="width:36px;"><input type="checkbox" disabled /></th>' +
+                        '<th>Nom</th><th>Email</th><th>Rôle</th><th>Date</th><th>Actions</th>' +
+                        '</tr></thead>' +
+                        '<tbody>' +
+                        '<tr><td><input type="checkbox" disabled /></td><td><div class="row-skeleton-bar" style="width:70%;"></div></td><td><div class="row-skeleton-bar" style="width:85%;"></div></td><td><div class="row-skeleton-bar" style="width:60%;"></div></td><td><div class="row-skeleton-bar" style="width:75%;"></div></td><td><span style="color:var(--text-muted);">⋮</span></td></tr>' +
+                        '<tr><td><input type="checkbox" disabled /></td><td><div class="row-skeleton-bar" style="width:65%;"></div></td><td><div class="row-skeleton-bar" style="width:90%;"></div></td><td><div class="row-skeleton-bar" style="width:55%;"></div></td><td><div class="row-skeleton-bar" style="width:70%;"></div></td><td><span style="color:var(--text-muted);">⋮</span></td></tr>' +
+                        '</tbody></table>' +
+                        '<div class="datagrid-footer"><span>Page 1 sur 1</span><span>&lt; 1 &gt;</span></div>';
+                    wrapper.appendChild(dg);
+                } else if (el.type === 'Kanban') {
+                    const kb = document.createElement('div');
+                    kb.className = 'canvas-kanban-block';
+                    kb.innerHTML = '<div class="kanban-title-bar">' +
+                        '<span>' + (el.title || 'Task Pipeline') + '</span>' +
+                        '<span style="color:var(--text-muted);cursor:pointer;">⋮</span>' +
+                        '</div>' +
+                        '<div class="kanban-cols-container">' +
+                        '<div class="kanban-col-item"><div class="kanban-col-top"><span>À faire</span><span>⋮</span></div><div class="kanban-task-card emerald-tag"><div class="row-skeleton-bar" style="width:80%;"></div></div></div>' +
+                        '<div class="kanban-col-item"><div class="kanban-col-top"><span>En cours</span><span>⋮</span></div><div class="kanban-task-card amber-tag"><div class="row-skeleton-bar" style="width:65%;"></div></div></div>' +
+                        '<div class="kanban-col-item"><div class="kanban-col-top"><span>Terminé</span><span>⋮</span></div><div class="kanban-task-card"><div class="row-skeleton-bar" style="width:70%;"></div></div></div>' +
+                        '</div>';
+                    wrapper.appendChild(kb);
+                } else if (el.type === 'Card' || el.type === 'Stack' || el.type === 'ResponsiveGrid' || el.type === 'Row' || el.type === 'Column' || el.type === 'Container' || el.type === 'Modal' || el.type === 'Drawer') {
                     const cont = document.createElement('div');
                     cont.className = 'canvas-form-block';
-                    cont.innerHTML = \`
-                        <div style="font-size:13px;font-weight:700;color:var(--text-secondary);display:flex;justify-content:space-between;">
-                            <span>\${el.title || el.name}</span>
-                            <span style="font-size:10px;color:var(--accent-cyan);text-transform:uppercase;">\${el.type}</span>
-                        </div>
-                    \`;
+                    cont.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text-secondary);display:flex;justify-content:space-between;margin-bottom:8px;">' +
+                        '<span>' + (el.title || el.name) + '</span>' +
+                        '<span style="font-size:10px;color:var(--accent-cyan);text-transform:uppercase;">' + el.type + '</span>' +
+                        '</div>';
                     const slot = document.createElement('div');
                     const isRow = el.type === 'Row' || (el.type === 'Stack' && el.direction === 'horizontal');
                     slot.className = 'container-drop-zone' + (el.type === 'ResponsiveGrid' ? ' grid-layout' : (isRow ? ' row-layout' : ''));
@@ -2141,20 +2572,21 @@ ${convertIllpsToCss(illpsContent)}
                     cont.appendChild(slot);
                     wrapper.appendChild(cont);
                 } else {
-                    // Generic preview block
                     const block = document.createElement('div');
                     block.className = 'canvas-form-block';
-                    block.innerHTML = \`
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-weight:bold;">\${el.name}</span>
-                            <span style="font-size:10px;color:var(--accent-cyan);">\${el.type}</span>
-                        </div>
-                    \`;
+                    block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                        '<span style="font-weight:bold;">' + el.name + '</span>' +
+                        '<span style="font-size:10px;color:var(--accent-cyan);">' + el.type + '</span>' +
+                        '</div>';
                     wrapper.appendChild(block);
                 }
 
                 domParent.appendChild(wrapper);
             });
+        }
+
+        function varColor(cssVar, fallback) {
+            return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim() || fallback;
         }
 
         // -------------------------------------------------------------
@@ -2225,9 +2657,7 @@ ${convertIllpsToCss(illpsContent)}
             if (source === 'canvas' && elemId) {
                 const found = findElementNode(elements, elemId);
                 if (found) {
-                    // Remove from old parent list
                     found.list.splice(found.index, 1);
-
                     let destIndex = targetInfo.index;
                     if (found.list === targetList && found.index < destIndex) {
                         destIndex--;
@@ -2260,7 +2690,7 @@ ${convertIllpsToCss(illpsContent)}
 
                 const ghostText = document.getElementById('ghost-tooltip-text');
                 if (ghostText) {
-                    ghostText.textContent = \`Drop \${type} to Create new Section. Bind to RPC 'Users.list'?\`;
+                    ghostText.textContent = 'Ajouter ' + type + ' au projet';
                 }
             });
 
@@ -2300,7 +2730,7 @@ ${convertIllpsToCss(illpsContent)}
 
         // Keyboard Shortcuts: Del to delete, Ctrl+D to duplicate
         window.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
 
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 if (selectedId) {
@@ -2333,6 +2763,26 @@ ${convertIllpsToCss(illpsContent)}
             };
         }
 
+        // Collapse / Expand Right Panel
+        const btnCollapseRight = document.getElementById('btn-collapse-right');
+        const propertiesPanel = document.getElementById('properties-panel');
+        if (btnCollapseRight && propertiesPanel) {
+            btnCollapseRight.onclick = () => {
+                propertiesPanel.classList.toggle('collapsed');
+                btnCollapseRight.textContent = propertiesPanel.classList.contains('collapsed') ? '«' : '»';
+            };
+        }
+
+        // Collapse / Expand Left Palette
+        const btnToggleLeftPanel = document.getElementById('btn-toggle-left-panel');
+        const elementsPanel = document.getElementById('elements-panel');
+        if (btnToggleLeftPanel && elementsPanel) {
+            btnToggleLeftPanel.onclick = () => {
+                const isHidden = elementsPanel.style.display === 'none';
+                elementsPanel.style.display = isHidden ? 'flex' : 'none';
+            };
+        }
+
         // -------------------------------------------------------------
         // PROPERTIES INSPECTOR RENDERING & LIVE UPDATE
         // -------------------------------------------------------------
@@ -2340,30 +2790,45 @@ ${convertIllpsToCss(illpsContent)}
             const found = selectedId ? findElementNode(elements, selectedId) : null;
 
             if (!found) {
-                inspectorHeaderTitle.textContent = "PROPERTIES - Window Canvas";
-                document.getElementById('acc-specific').innerHTML = \`
-                    <div class="control-row">
-                        <span class="control-label">Window Title:</span>
-                        <input type="text" class="prop-text-input" id="prop-win-title" value="\${bgConfig.name}" />
-                    </div>
-                    <div class="control-row">
-                        <span class="control-label">Min Width:</span>
-                        <input type="text" class="prop-text-input" id="prop-win-minw" value="\${bgConfig.minWidth}" />
-                    </div>
-                    <div class="control-row">
-                        <span class="control-label">Max Width:</span>
-                        <input type="text" class="prop-text-input" id="prop-win-maxw" value="\${bgConfig.maxWidth}" />
-                    </div>
-                \`;
+                inspectorHeaderTitle.textContent = "PROPRIÉTÉS - Fenêtre Principale";
+                document.getElementById('acc-specific').innerHTML = 
+                    '<div class="control-row">' +
+                    '<span class="control-label">Titre de la Fenêtre:</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-win-title" value="' + bgConfig.name + '" />' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Largeur Min (minWidth):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-win-minw" value="' + (bgConfig.minWidth || '500px') + '" />' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Largeur Max (maxWidth):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-win-maxw" value="' + (bgConfig.maxWidth || '1400px') + '" />' +
+                    '</div>' +
+                    '<div class="control-row horizontal" style="margin-top:8px;">' +
+                    '<span class="control-label">Responsive:</span>' +
+                    '<input type="checkbox" id="prop-win-resp" ' + (bgConfig.responsive ? 'checked' : '') + ' style="width:16px;height:16px;" />' +
+                    '</div>';
                 const titleInput = document.getElementById('prop-win-title');
                 if (titleInput) {
                     titleInput.oninput = () => { bgConfig.name = titleInput.value; };
+                }
+                const minwInput = document.getElementById('prop-win-minw');
+                if (minwInput) {
+                    minwInput.oninput = () => { bgConfig.minWidth = minwInput.value; };
+                }
+                const maxwInput = document.getElementById('prop-win-maxw');
+                if (maxwInput) {
+                    maxwInput.oninput = () => { bgConfig.maxWidth = maxwInput.value; };
+                }
+                const respInput = document.getElementById('prop-win-resp');
+                if (respInput) {
+                    respInput.onchange = () => { bgConfig.responsive = respInput.checked; };
                 }
                 return;
             }
 
             const el = found.item;
-            inspectorHeaderTitle.textContent = "PROPERTIES - " + (el.type || 'Element');
+            inspectorHeaderTitle.textContent = "PROPRIÉTÉS - " + (el.type || 'Composant');
 
             // Data binding inputs
             const rpcInput = document.getElementById('prop-rpc-method');
@@ -2378,92 +2843,271 @@ ${convertIllpsToCss(illpsContent)}
                 autoPageCheck.onchange = () => { el.autoPagination = autoPageCheck.checked; };
             }
 
-            // Populate specific fields
-            let specificHtml = \`
-                <div class="control-row">
-                    <span class="control-label">Identifier (Name):</span>
-                    <input type="text" class="prop-text-input" id="prop-elem-name" value="\${el.name || ''}" />
-                </div>
-            \`;
+            // Populate specific fields dynamically for every component
+            let specificHtml = '<div class="control-row">' +
+                '<span class="control-label">Identifiant (Name):</span>' +
+                '<input type="text" class="prop-text-input" id="prop-elem-name" value="' + (el.name || '') + '" />' +
+                '</div>';
 
-            if (el.type === 'DataGrid' || el.type === 'Kanban' || el.type === 'Card' || el.type === 'Header') {
-                specificHtml += \`
-                    <div class="control-row">
-                        <span class="control-label">Header Title:</span>
-                        <input type="text" class="prop-text-input" id="prop-elem-title" value="\${el.title || ''}" />
-                    </div>
-                \`;
+            if (el.type === 'Text') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Contenu Texte (txt / content):</span>' +
+                    '<textarea class="prop-text-input" id="prop-elem-content" style="height:60px;resize:vertical;">' + (el.content || '') + '</textarea>' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Taille Police (fontSize):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-elem-fontsize" value="' + (el.fontSize || '15px') + '" placeholder="15px" />' +
+                    '</div>';
             }
 
             if (el.type === 'Button') {
-                specificHtml += \`
-                    <div class="control-row">
-                        <span class="control-label">Button Label:</span>
-                        <input type="text" class="prop-text-input" id="prop-btn-text" value="\${el.text || ''}" />
-                    </div>
-                    <div class="control-row">
-                        <span class="control-label">Variant:</span>
-                        <select class="prop-text-input" id="prop-btn-variant">
-                            <option value="primary" \${el.variant === 'primary' ? 'selected' : ''}>Primary (Neon Cyan)</option>
-                            <option value="outline" \${el.variant === 'outline' ? 'selected' : ''}>Outline Cyan</option>
-                            <option value="standard" \${el.variant === 'standard' ? 'selected' : ''}>Standard Slate</option>
-                        </select>
-                    </div>
-                \`;
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Libellé du Bouton (text):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-btn-text" value="' + (el.text || '') + '" />' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Variante de Style:</span>' +
+                    '<select class="prop-text-input" id="prop-btn-variant">' +
+                    '<option value="primary" ' + (el.variant === 'primary' ? 'selected' : '') + '>Primaire (Cyan Néon)</option>' +
+                    '<option value="outline" ' + (el.variant === 'outline' ? 'selected' : '') + '>Contour (Outline Cyan)</option>' +
+                    '<option value="danger" ' + (el.variant === 'danger' ? 'selected' : '') + '>Danger (Rouge)</option>' +
+                    '<option value="success" ' + (el.variant === 'success' ? 'selected' : '') + '>Succès (Vert Émeraude)</option>' +
+                    '<option value="standard" ' + (el.variant === 'standard' ? 'selected' : '') + '>Standard (Gris Ardoise)</option>' +
+                    '</select></div>';
             }
 
             if (el.type === 'TextInput') {
-                specificHtml += \`
-                    <div class="control-row">
-                        <span class="control-label">Placeholder:</span>
-                        <input type="text" class="prop-text-input" id="prop-input-ph" value="\${el.placeholder || ''}" />
-                    </div>
-                \`;
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Placeholder (Texte fantôme):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-input-ph" value="' + (el.placeholder || '') + '" />' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Valeur Initiale (value):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-input-val" value="' + (el.value || '') + '" />' +
+                    '</div>';
             }
 
-            if (el.type === 'DataGrid' && el.columns) {
-                specificHtml += \`
-                    <div class="control-row">
-                        <span class="control-label">Columns (CSV):</span>
-                        <input type="text" class="prop-text-input" id="prop-grid-cols" value="\${el.columns.join(', ')}" />
-                    </div>
-                \`;
+            if (el.type === 'Checkbox') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Libellé (label):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-chk-lbl" value="' + (el.label || '') + '" />' +
+                    '</div>' +
+                    '<div class="control-row horizontal">' +
+                    '<span class="control-label">Coché par défaut:</span>' +
+                    '<input type="checkbox" id="prop-chk-checked" ' + (el.checked ? 'checked' : '') + ' style="width:16px;height:16px;" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'ProgressBar') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Valeur (0-100):</span>' +
+                    '<input type="number" class="prop-text-input" id="prop-prog-val" value="' + (el.value !== undefined ? el.value : 50) + '" min="0" max="100" />' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Valeur Max:</span>' +
+                    '<input type="number" class="prop-text-input" id="prop-prog-max" value="' + (el.max || 100) + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'ItemBox') {
+                const optStr = Array.isArray(el.options) ? el.options.join(', ') : (el.options || '');
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Options (séparées par virgule):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-sel-opts" value="' + optStr + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'ListButton') {
+                const itms = Array.isArray(el.items) ? el.items.join(', ') : (el.items || '');
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Onglets / Items (séparés par virgule):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-lb-items" value="' + itmStr + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'Card' || el.type === 'Modal' || el.type === 'Drawer' || el.type === 'Header') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Titre d\'En-tête:</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-elem-title" value="' + (el.title || '') + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'Toast') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Message d\'Alerte:</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-toast-msg" value="' + (el.message || '') + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'Image') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Source URL / Fichier:</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-img-src" value="' + (el.src || '') + '" placeholder="assets/logo.png ou https://..." />' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Texte Alternatif (Alt):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-img-alt" value="' + (el.alt || '') + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'DataGrid') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Colonnes (CSV):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-grid-cols" value="' + ((el.columns || []).join(', ')) + '" />' +
+                    '</div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Taille de page:</span>' +
+                    '<input type="number" class="prop-text-input" id="prop-grid-ps" value="' + (el.pageSize || 25) + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'Kanban') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Colonnes (CSV):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-kb-cols" value="' + ((el.columns || []).join(', ')) + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'Chart') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Type de Graphique:</span>' +
+                    '<select class="prop-text-input" id="prop-chart-type">' +
+                    '<option value="bar" ' + (el.chartType === 'bar' ? 'selected' : '') + '>Barres (Bar Chart)</option>' +
+                    '<option value="line" ' + (el.chartType === 'line' ? 'selected' : '') + '>Ligne (Line Chart)</option>' +
+                    '<option value="pie" ' + (el.chartType === 'pie' ? 'selected' : '') + '>Camembert (Pie Chart)</option>' +
+                    '</select></div>';
+            }
+
+            if (el.type === 'Stack') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Direction:</span>' +
+                    '<select class="prop-text-input" id="prop-stack-dir">' +
+                    '<option value="horizontal" ' + (el.direction === 'horizontal' ? 'selected' : '') + '>Horizontal (Ligne)</option>' +
+                    '<option value="vertical" ' + (el.direction === 'vertical' ? 'selected' : '') + '>Vertical (Colonne)</option>' +
+                    '</select></div>' +
+                    '<div class="control-row">' +
+                    '<span class="control-label">Espacement (gap):</span>' +
+                    '<input type="text" class="prop-text-input" id="prop-stack-gap" value="' + (el.gap || '16px') + '" />' +
+                    '</div>';
+            }
+
+            if (el.type === 'ResponsiveGrid') {
+                specificHtml += '<div class="control-row">' +
+                    '<span class="control-label">Nombre de Colonnes:</span>' +
+                    '<input type="number" class="prop-text-input" id="prop-grid-cols-cnt" value="' + (el.columns || 12) + '" min="1" max="24" />' +
+                    '</div>';
             }
 
             document.getElementById('acc-specific').innerHTML = specificHtml;
 
-            // Wire input events
+            // Wire input events dynamically
             const nameInput = document.getElementById('prop-elem-name');
             if (nameInput) {
                 nameInput.oninput = () => { el.name = nameInput.value; renderCanvas(); };
             }
-
+            const contentInput = document.getElementById('prop-elem-content');
+            if (contentInput) {
+                contentInput.oninput = () => { el.content = contentInput.value; renderCanvas(); };
+            }
+            const fontsizeInput = document.getElementById('prop-elem-fontsize');
+            if (fontsizeInput) {
+                fontsizeInput.oninput = () => { el.fontSize = fontsizeInput.value; renderCanvas(); };
+            }
             const titleInput = document.getElementById('prop-elem-title');
             if (titleInput) {
                 titleInput.oninput = () => { el.title = titleInput.value; renderCanvas(); };
             }
-
             const btnTextInput = document.getElementById('prop-btn-text');
             if (btnTextInput) {
                 btnTextInput.oninput = () => { el.text = btnTextInput.value; renderCanvas(); };
             }
-
             const btnVarInput = document.getElementById('prop-btn-variant');
             if (btnVarInput) {
                 btnVarInput.onchange = () => { el.variant = btnVarInput.value; renderCanvas(); };
             }
-
             const phInput = document.getElementById('prop-input-ph');
             if (phInput) {
                 phInput.oninput = () => { el.placeholder = phInput.value; renderCanvas(); };
             }
-
+            const valInput = document.getElementById('prop-input-val');
+            if (valInput) {
+                valInput.oninput = () => { el.value = valInput.value; renderCanvas(); };
+            }
+            const chkLbl = document.getElementById('prop-chk-lbl');
+            if (chkLbl) {
+                chkLbl.oninput = () => { el.label = chkLbl.value; renderCanvas(); };
+            }
+            const chkChecked = document.getElementById('prop-chk-checked');
+            if (chkChecked) {
+                chkChecked.onchange = () => { el.checked = chkChecked.checked; renderCanvas(); };
+            }
+            const progVal = document.getElementById('prop-prog-val');
+            if (progVal) {
+                progVal.oninput = () => { el.value = parseInt(progVal.value, 10) || 0; renderCanvas(); };
+            }
+            const progMax = document.getElementById('prop-prog-max');
+            if (progMax) {
+                progMax.oninput = () => { el.max = parseInt(progMax.value, 10) || 100; renderCanvas(); };
+            }
+            const selOpts = document.getElementById('prop-sel-opts');
+            if (selOpts) {
+                selOpts.oninput = () => {
+                    el.options = selOpts.value.split(',').map(s => s.trim()).filter(Boolean);
+                    renderCanvas();
+                };
+            }
+            const lbItems = document.getElementById('prop-lb-items');
+            if (lbItems) {
+                lbItems.oninput = () => {
+                    el.items = lbItems.value.split(',').map(s => s.trim()).filter(Boolean);
+                    renderCanvas();
+                };
+            }
+            const toastMsg = document.getElementById('prop-toast-msg');
+            if (toastMsg) {
+                toastMsg.oninput = () => { el.message = toastMsg.value; renderCanvas(); };
+            }
+            const imgSrc = document.getElementById('prop-img-src');
+            if (imgSrc) {
+                imgSrc.oninput = () => { el.src = imgSrc.value; renderCanvas(); };
+            }
+            const imgAlt = document.getElementById('prop-img-alt');
+            if (imgAlt) {
+                imgAlt.oninput = () => { el.alt = imgAlt.value; renderCanvas(); };
+            }
             const colsInput = document.getElementById('prop-grid-cols');
             if (colsInput) {
                 colsInput.oninput = () => {
                     el.columns = colsInput.value.split(',').map(s => s.trim()).filter(Boolean);
                     renderCanvas();
                 };
+            }
+            const gridPs = document.getElementById('prop-grid-ps');
+            if (gridPs) {
+                gridPs.oninput = () => { el.pageSize = parseInt(gridPs.value, 10) || 25; };
+            }
+            const kbCols = document.getElementById('prop-kb-cols');
+            if (kbCols) {
+                kbCols.oninput = () => {
+                    el.columns = kbCols.value.split(',').map(s => s.trim()).filter(Boolean);
+                    renderCanvas();
+                };
+            }
+            const chartType = document.getElementById('prop-chart-type');
+            if (chartType) {
+                chartType.onchange = () => { el.chartType = chartType.value; renderCanvas(); };
+            }
+            const stackDir = document.getElementById('prop-stack-dir');
+            if (stackDir) {
+                stackDir.onchange = () => { el.direction = stackDir.value; renderCanvas(); };
+            }
+            const stackGap = document.getElementById('prop-stack-gap');
+            if (stackGap) {
+                stackGap.oninput = () => { el.gap = stackGap.value; renderCanvas(); };
+            }
+            const gridColsCnt = document.getElementById('prop-grid-cols-cnt');
+            if (gridColsCnt) {
+                gridColsCnt.oninput = () => { el.columns = parseInt(gridColsCnt.value, 10) || 12; renderCanvas(); };
             }
         }
 
@@ -2477,12 +3121,12 @@ ${convertIllpsToCss(illpsContent)}
 
         window.setSizeMode = function(mode) {
             document.querySelectorAll('#acc-layout .segmented-btn-group button').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            if (window.event && window.event.target) window.event.target.classList.add('active');
         };
 
         window.setAlign = function(align) {
             document.querySelectorAll('#acc-layout .segmented-btn-group:nth-child(2) button').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            if (window.event && window.event.target) window.event.target.classList.add('active');
             const found = selectedId ? findElementNode(elements, selectedId) : null;
             if (found) {
                 found.item.customAlign = align;
@@ -2491,12 +3135,12 @@ ${convertIllpsToCss(illpsContent)}
         };
 
         window.editEvent = function(eventName) {
-            const code = prompt(\`Edit \${eventName} handler logic:\`, \`// Called when \${eventName} triggers\\nprint("\${eventName} executed");\`);
+            const code = prompt('Modifier la logique d\'événement ' + eventName + ' :', '// Appelé lors du déclenchement de ' + eventName + '\nprint("' + eventName + ' exécuté");');
             if (code !== null) {
                 const found = selectedId ? findElementNode(elements, selectedId) : null;
                 if (found) {
                     found.item['event_' + eventName] = code;
-                    alert(\`✓ Event handler for \${eventName} updated!\`);
+                    alert('✓ Gestionnaire d\'événement ' + eventName + ' enregistré !');
                 }
             }
         };
@@ -2508,68 +3152,201 @@ ${convertIllpsToCss(illpsContent)}
             isPreviewMode = !isPreviewMode;
             document.body.classList.toggle('preview-mode', isPreviewMode);
             btnPreview.classList.toggle('active', isPreviewMode);
-            previewBtnText.textContent = isPreviewMode ? 'Edit Mode' : 'Preview';
+            previewBtnText.textContent = isPreviewMode ? 'Éditer' : 'Aperçu';
             renderCanvas();
+        });
+
+        // -------------------------------------------------------------
+        // MODAL MANAGEMENT
+        // -------------------------------------------------------------
+        window.openModal = function(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.add('active');
+        };
+
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.remove('active');
+        };
+
+        window.launchPublishProcess = function() {
+            closeModal('modal-publish');
+            alert('🚀 [LLP Publish Engine]\n\nInterface ' + bgConfig.name + ' compilée avec succès !\n• Signature matérielle validée\n• Binaire prêt dans le répertoire dist/ de votre projet.');
+        };
+
+        window.copyExportedCode = function() {
+            const textarea = document.getElementById('exported-illp-code');
+            if (textarea) {
+                textarea.select();
+                navigator.clipboard.writeText(textarea.value).then(() => {
+                    alert('✓ Code .illp copié dans le presse-papier !');
+                });
+            }
+        };
+
+        btnPublish.addEventListener('click', () => openModal('modal-publish'));
+        btnApiDocs.addEventListener('click', () => openModal('modal-api-docs'));
+
+        // -------------------------------------------------------------
+        // TOPBAR DROPDOWN MENUS
+        // -------------------------------------------------------------
+        function toggleDropdown(id) {
+            document.querySelectorAll('.nav-dropdown-menu').forEach(d => {
+                if (d.id !== id) d.classList.remove('active');
+            });
+            const menu = document.getElementById(id);
+            if (menu) menu.classList.toggle('active');
+        }
+
+        document.getElementById('menu-file').onclick = (e) => { e.stopPropagation(); toggleDropdown('dropdown-file'); };
+        document.getElementById('menu-edit').onclick = (e) => { e.stopPropagation(); toggleDropdown('dropdown-edit'); };
+        document.getElementById('menu-project').onclick = (e) => { e.stopPropagation(); toggleDropdown('dropdown-project'); };
+
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.nav-dropdown-menu').forEach(d => d.classList.remove('active'));
+        });
+
+        document.getElementById('opt-file-save').onclick = () => btnSave.click();
+        document.getElementById('opt-file-preview').onclick = () => btnPreview.click();
+        document.getElementById('opt-file-reload').onclick = () => {
+            elements = parseIllpToTree(initialRaw);
+            renderCanvas();
+            renderPropertiesInspector();
+        };
+        document.getElementById('opt-file-export').onclick = () => {
+            const code = generateFullIllpCode();
+            document.getElementById('exported-illp-code').value = code;
+            openModal('modal-export-illp');
+        };
+
+        document.getElementById('opt-edit-dup').onclick = () => {
+            if (selectedId) duplicateElement(selectedId);
+        };
+        document.getElementById('opt-edit-del').onclick = () => {
+            if (selectedId) deleteElement(selectedId);
+        };
+        document.getElementById('opt-edit-deselect').onclick = () => {
+            selectedId = null;
+            renderCanvas();
+            renderPropertiesInspector();
+        };
+
+        document.getElementById('opt-proj-settings').onclick = () => {
+            selectedId = null;
+            renderCanvas();
+            renderPropertiesInspector();
+        };
+        document.getElementById('opt-proj-docs').onclick = () => openModal('modal-api-docs');
+        document.getElementById('opt-proj-publish').onclick = () => openModal('modal-publish');
+
+        // Activity strip icons
+        const activityBtns = document.querySelectorAll('.activity-icon-btn');
+        activityBtns.forEach((btn, idx) => {
+            btn.addEventListener('click', () => {
+                activityBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (idx === 0) {
+                    elementsPanel.style.display = 'flex';
+                } else if (idx === 1) {
+                    alert('🌳 [Arborescence des Composants]\n\nNombre d\'éléments actifs : ' + elements.length + '\nSélectionnez n\'importe quel élément pour afficher ses propriétés.');
+                } else if (idx === 2) {
+                    openModal('modal-api-docs');
+                } else if (idx === 3) {
+                    selectedId = null;
+                    renderCanvas();
+                    renderPropertiesInspector();
+                }
+            });
         });
 
         // -------------------------------------------------------------
         // SAVE SERIALIZATION (.ILLP CODE GENERATION)
         // -------------------------------------------------------------
-        function stringifyElementTree(list, indent = "    ") {
-            let str = "";
-            list.forEach((el, index) => {
-                const name = el.name || (el.type + "_1");
-                let line = "";
+        function stringifyElementTree(list, indent) {
+            indent = indent || '    ';
+            let str = '';
+            list.forEach((el) => {
+                const name = el.name || (el.type + '_1');
+                let line = '';
 
-                if (el.type === 'Header' || el.type === 'Text') {
-                    line = indent + 'Text "' + name + '" content: "' + (el.title || el.content || 'Header') + '"';
-                } else if (el.type === 'TextInput') {
-                    line = indent + 'TextInput "' + name + '" placeholder: "' + (el.placeholder || 'Input') + '"';
+                if (el.type === 'Text') {
+                    line = indent + 'Text "' + name + '" content: "' + (el.content || 'Texte') + '"';
                 } else if (el.type === 'Button') {
-                    line = indent + 'Button "' + name + '" text: "' + (el.text || 'Primary Button') + '"';
+                    line = indent + 'Button "' + name + '" text: "' + (el.text || 'Bouton') + '"';
                     if (el.variant) line += ' variant: "' + el.variant + '"';
+                } else if (el.type === 'TextInput') {
+                    line = indent + 'TextInput "' + name + '" placeholder: "' + (el.placeholder || '') + '"';
+                    if (el.value) line += ' value: "' + el.value + '"';
+                } else if (el.type === 'Checkbox') {
+                    line = indent + 'Checkbox "' + name + '" label: "' + (el.label || '') + '" checked: ' + (el.checked ? 'true' : 'false');
+                } else if (el.type === 'ProgressBar') {
+                    line = indent + 'ProgressBar "' + name + '" value: ' + (el.value || 0) + ' max: ' + (el.max || 100);
+                } else if (el.type === 'ItemBox') {
+                    line = indent + 'ItemBox "' + name + '"';
+                } else if (el.type === 'ListButton') {
+                    line = indent + 'ListButton "' + name + '"';
+                } else if (el.type === 'Divider') {
+                    line = indent + 'Divider "' + name + '"';
+                } else if (el.type === 'Image') {
+                    line = indent + 'Image "' + name + '" src: "' + (el.src || '') + '"';
+                } else if (el.type === 'Toast') {
+                    line = indent + 'Toast "' + name + '" message: "' + (el.message || '') + '"';
                 } else if (el.type === 'DataGrid') {
                     line = indent + 'DataGrid "' + name + '" rpcSource: "' + (el.rpcSource || 'server.Users.list') + '" pageSize: ' + (el.pageSize || 25);
                 } else if (el.type === 'Kanban') {
                     line = indent + 'Kanban "' + name + '" rpcSource: "' + (el.rpcSource || 'server.Tasks.list') + '"';
-                } else if (el.type === 'Card' || el.type === 'Section') {
-                    line = indent + 'Card "' + name + '" title: "' + (el.title || 'Section') + '" {\\n';
-                    line += stringifyElementTree(el.children || [], indent + "    ");
+                } else if (el.type === 'Chart') {
+                    line = indent + 'Chart "' + name + '" title: "' + (el.title || '') + '" rpcSource: "' + (el.rpcSource || 'server.Analytics.metrics') + '"';
+                } else if (el.type === 'Card') {
+                    line = indent + 'Card "' + name + '" title: "' + (el.title || 'Section') + '" {\n';
+                    line += stringifyElementTree(el.children || [], indent + '    ');
+                    line += indent + '}';
+                } else if (el.type === 'Modal') {
+                    line = indent + 'Modal "' + name + '" title: "' + (el.title || 'Modale') + '" {\n';
+                    line += stringifyElementTree(el.children || [], indent + '    ');
+                    line += indent + '}';
+                } else if (el.type === 'Drawer') {
+                    line = indent + 'Drawer "' + name + '" title: "' + (el.title || 'Tiroir') + '" {\n';
+                    line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else if (el.type === 'Stack') {
-                    line = indent + 'Stack "' + name + '" direction: "' + (el.direction || 'horizontal') + '" gap: "' + (el.gap || '16px') + '" {\\n';
-                    line += stringifyElementTree(el.children || [], indent + "    ");
+                    line = indent + 'Stack "' + name + '" direction: "' + (el.direction || 'horizontal') + '" gap: "' + (el.gap || '16px') + '" {\n';
+                    line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else if (el.type === 'ResponsiveGrid') {
-                    line = indent + 'ResponsiveGrid "' + name + '" columns: ' + (el.columns || 12) + ' {\\n';
-                    line += stringifyElementTree(el.children || [], indent + "    ");
+                    line = indent + 'ResponsiveGrid "' + name + '" columns: ' + (el.columns || 12) + ' {\n';
+                    line += stringifyElementTree(el.children || [], indent + '    ');
+                    line += indent + '}';
+                } else if (el.type === 'Row') {
+                    line = indent + 'Row "' + name + '" {\n';
+                    line += stringifyElementTree(el.children || [], indent + '    ');
                     line += indent + '}';
                 } else {
                     line = indent + el.type + ' "' + name + '"';
                     if (el.children) {
-                        line += ' {\\n' + stringifyElementTree(el.children, indent + "    ") + indent + '}';
+                        line += ' {\n' + stringifyElementTree(el.children, indent + '    ') + indent + '}';
                     }
                 }
 
-                str += line + "\\n";
+                str += line + '\n';
             });
             return str;
         }
 
         function generateFullIllpCode() {
-            let code = "visibility: All\\n\\n";
-            code += "/* ===================================================\\n";
-            code += "   LLP Interface (.illp) - Generated by LLP UI BUILDER\\n";
-            code += "   Device Security & Dynamic RPC Layer Active\\n";
-            code += "   =================================================== *\\\\\\n\\n";
+            let code = 'visibility: All\n\n';
+            code += '/* ===================================================\n';
+            code += '   LLP Interface (.illp) - Generated by LLP UI BUILDER\n';
+            code += '   Device Security & Dynamic RPC Layer Active\n';
+            code += '   =================================================== *\\\n\n';
 
             code += 'Background "' + bgConfig.name + '" responsive: ' + (bgConfig.responsive ? 'true' : 'false');
             if (bgConfig.minWidth) code += ' minWidth: "' + bgConfig.minWidth + '"';
             if (bgConfig.maxWidth) code += ' maxWidth: "' + bgConfig.maxWidth + '"';
-            code += ' {\\n';
+            code += ' {\n';
 
-            code += stringifyElementTree(elements, "    ");
-            code += "}\\n";
+            code += stringifyElementTree(elements, '    ');
+            code += '}\n';
 
             return code;
         }
@@ -2591,10 +3368,10 @@ ${convertIllpsToCss(illpsContent)}
                     if (res.ok) {
                         flashSaved();
                     } else {
-                        alert("Erreur de sauvegarde : " + res.error);
+                        alert('Erreur de sauvegarde : ' + res.error);
                     }
                 }).catch(err => {
-                    alert("Erreur réseau de sauvegarde : " + err.message);
+                    alert('Erreur réseau de sauvegarde : ' + err.message);
                 });
             } else {
                 flashSaved();
@@ -2602,20 +3379,15 @@ ${convertIllpsToCss(illpsContent)}
         });
 
         function flashSaved() {
-            saveBtnText.textContent = "Saved! ✓";
-            btnSave.style.borderColor = "#10b981";
-            btnSave.style.color = "#10b981";
+            saveBtnText.textContent = 'Saved! ✓';
+            btnSave.style.borderColor = '#10b981';
+            btnSave.style.color = '#10b981';
             setTimeout(() => {
-                saveBtnText.textContent = "Save";
-                btnSave.style.borderColor = "#3b82f6";
-                btnSave.style.color = "#93c5fd";
+                saveBtnText.textContent = 'Save';
+                btnSave.style.borderColor = '#3b82f6';
+                btnSave.style.color = '#93c5fd';
             }, 1800);
         }
-
-        // Publish action
-        btnPublish.addEventListener('click', () => {
-            alert("🚀 [LLP Publish Engine]\\n\\nVotre interface est compilée et prête pour le déploiement multi-plateforme (Windows .exe, Webview, Android APK) avec signature matérielle Ed25519 active.");
-        });
 
         // Search Palette Filter
         paletteFilter.addEventListener('input', () => {

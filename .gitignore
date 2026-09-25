@@ -28,3 +28,9 @@ app_config.txt
 
 # Windows batch files
 *.bat
+
+# VS Code extension packages
+*.vsix
+
+# Local test projects
+examples/MyLLPProject/

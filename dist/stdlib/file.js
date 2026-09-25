@@ -108,7 +108,7 @@ function registerFileSystem(env) {
     // Create Directory Instance
     const dirObj = new instance_1.Instance("DirectoryService");
     dirObj.Name = "Directory";
-    dirObj.SetProperty("List", {
+    const listFn = {
         type: "native_fn",
         call: (args) => {
             const dirPath = args.length > 0 && args[0].type === "string" ? args[0].value : ".";
@@ -122,7 +122,9 @@ function registerFileSystem(env) {
                 elements: files.map(f => (0, values_1.MK_STRING)(f))
             };
         }
-    });
+    };
+    dirObj.SetProperty("List", listFn);
+    dirObj.SetProperty("ListFiles", listFn);
     dirObj.SetProperty("Create", {
         type: "native_fn",
         call: (args) => {
@@ -130,6 +132,34 @@ function registerFileSystem(env) {
                 return (0, values_1.MK_BOOL)(false);
             fs.mkdirSync(args[0].value, { recursive: true });
             return (0, values_1.MK_BOOL)(true);
+        }
+    });
+    dirObj.SetProperty("Exists", {
+        type: "native_fn",
+        call: (args) => {
+            if (args.length < 1 || args[0].type !== "string")
+                return (0, values_1.MK_BOOL)(false);
+            try {
+                return (0, values_1.MK_BOOL)(fs.existsSync(args[0].value) && fs.statSync(args[0].value).isDirectory());
+            }
+            catch {
+                return (0, values_1.MK_BOOL)(false);
+            }
+        }
+    });
+    dirObj.SetProperty("Delete", {
+        type: "native_fn",
+        call: (args) => {
+            if (args.length < 1 || args[0].type !== "string")
+                return (0, values_1.MK_BOOL)(false);
+            try {
+                if (fs.existsSync(args[0].value)) {
+                    fs.rmSync(args[0].value, { recursive: true, force: true });
+                    return (0, values_1.MK_BOOL)(true);
+                }
+            }
+            catch { }
+            return (0, values_1.MK_BOOL)(false);
         }
     });
     env.declareVar("Directory", { type: "instance", instance: dirObj }, "General");

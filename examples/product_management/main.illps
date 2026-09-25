@@ -1,6 +1,6 @@
 /* ===================================================
-   Style de l'Interface (.illps) - Lolpaon Pro
-   Thème Sombre Premium & Harmonieux
+   Interface Stylesheet (.illps) - Lolpaon Pro
+   Premium Dark Theme
    =================================================== */
 
 Background#ProductManagementWindow {
@@ -98,15 +98,37 @@ Button#BtnSubmitProduct {
 }
 
 Modal#InactivityAlertModal {
-    background: #1e1b4b;
+    background: #1e293b;
     border: 2px solid #ef4444;
     border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    padding: 24px;
+}
+
+Text#InactivityModalNotice {
+    color: #f8fafc;
+    font-size: 15px;
+    margin-bottom: 12px;
 }
 
 Text#InactivityModalCountdown {
-    font-size: 28px;
-    font-weight: 800;
-    color: #ef4444;
-    text-align: center;
+    color: #f87171;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+Button#BtnStayConnected {
+    background: #22c55e;
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+
+Button#BtnConfirmLogout {
+    background: #ef4444;
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 10px 20px;
 }

@@ -1,41 +1,41 @@
 visibility: All
 
 /* ===================================================
-   Styles Connexion (.illps) - Page 1
+   Login Styles (.illps) - Page 1
    =================================================== *\
 
-Background.FenetreConnexion {
+Background.LoginWindow {
     background: #11111b
     padding: 30px
     responsive: true
 }
 
-Card#CarteConnexion {
+Card#LoginCard {
     background: #1e1e2e
     border: 1px solid #313244
     borderRadius: 14px
     padding: 24px
 }
 
-Image#LogoConnexion {
+Image#LoginLogo {
     width: 60px
     height: 60px
     borderRadius: 10px
 }
 
-Text#TitreConnexion {
+Text#LoginTitle {
     color: #cdd6f4
     fontSize: 20px
     font: bold
 }
 
-Text#SousTitre {
+Text#LoginSubtitle {
     color: #a6adc8
     fontSize: 13px
     marginBottom: 16px
 }
 
-TextInput#InputUtilisateur {
+TextInput#InputUsername {
     background: #313244
     color: #ffffff
     border: 1px solid #45475a
@@ -59,7 +59,7 @@ Checkbox#CheckSession {
     marginBottom: 18px
 }
 
-Button#BtnConnexion {
+Button#BtnLogin {
     background: #89b4fa
     color: #11111b
     fontSize: 15px

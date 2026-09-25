@@ -18,9 +18,9 @@ func handleGetStats() {
 func handleGetProducts(category, limit) {
     print("[RPC Handler] Catalog.getProducts called with category:", category, "limit:", limit)
     General items = {
-        "Serveur Industriel Rack 2U (1499.99 EUR) - Stock: 14",
-        "Switch Managé 24 Ports PoE+ (429.50 EUR) - Stock: 38",
-        "Onduleur Sinusoïdal 3000VA (890.00 EUR) - Stock: 7"
+        "Industrial 2U Rack Server ($1499.99) - Stock: 14",
+        "Managed 24-Port PoE+ Switch ($429.50) - Stock: 38",
+        "Pure Sinewave 3000VA UPS ($890.00) - Stock: 7"
     }
     return items
 }

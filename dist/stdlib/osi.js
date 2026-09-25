@@ -67,7 +67,7 @@ class GlobalNetworkProfiler {
     constructor() {
         setInterval(() => {
             this.sampleMetrics();
-        }, 1000);
+        }, 1000).unref();
     }
     static getInstance() {
         if (!GlobalNetworkProfiler.instance) {

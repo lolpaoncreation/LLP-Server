@@ -1,7 +1,7 @@
 visibility: All
 
 /* ===================================================
-   Lolpaon Advanced Interface (.illp) : Rich Showcase
+   Lolpaon Advanced Interface (.illp): Rich Showcase
    Components: Stack, ResponsiveGrid, DataGrid, Kanban,
                Chart, Drawer, Modal, TagPicker, DatePicker,
                RichEditor, FileUpload, ColorPicker, Skeleton,
@@ -10,17 +10,17 @@ visibility: All
 
 Background "MainWindow" responsive: true minWidth: "500px" maxWidth: "1400px" {
     Stack "HeaderStack" direction: "horizontal" gap: "16px" align: "center" {
-        Text "AppTitle" content: "🚀 Entreprise Cloud Console (LLP v1.4)"
-        Toast "WelcomeToast" type: "success" message: "Connecté avec identité matérielle Device validée ✓"
+        Text "AppTitle" content: "🚀 Enterprise Cloud Console (LLP v1.5)"
+        Toast "WelcomeToast" type: "success" message: "Connected with verified hardware identity ✓"
     }
 
     Divider "Div1"
 
     ResponsiveGrid "DashboardMetricsGrid" columns: 12 gap: "16px" {
-        Chart "SalesTrendChart" type: "bar" title: "Volume de Ventes & Trafic Réseau" rpcSource: "Analytics.GetSales" colSpanDesktop: 8 colSpanMobile: 12
+        Chart "SalesTrendChart" type: "bar" title: "Sales Volume & Network Traffic" rpcSource: "Analytics.GetSales" colSpanDesktop: 8 colSpanMobile: 12
 
         Stack "SideControlStack" direction: "vertical" gap: "12px" align: "stretch" colSpanDesktop: 4 colSpanMobile: 12 {
-            TagPicker "CategoryTags" rpcSearch: "Catalog.SearchTags" debounce: 300 placeholder: "Filtrer par tags..."
+            TagPicker "CategoryTags" rpcSearch: "Catalog.SearchTags" debounce: 300 placeholder: "Filter by tags..."
             DatePicker "DateFilter" mode: "range" defaultRange: "Last30Days" onChange: "Analytics.SetDate"
             ColorPicker "ThemeColor" defaultColor: "#89b4fa"
         }
@@ -29,11 +29,11 @@ Background "MainWindow" responsive: true minWidth: "500px" maxWidth: "1400px" {
     Divider "Div2"
 
     Stack "MainDataStack" direction: "vertical" gap: "20px" align: "stretch" {
-        Card "CatalogCard" title: "Catalogue Matériel & Inventaire Distant" {
+        Card "CatalogCard" title: "Hardware Catalog & Remote Inventory" {
             DataGrid "ProductInventoryGrid" rpcSource: "Catalog.GetProducts" pageSize: 25 virtualScroll: true
         }
 
-        Card "KanbanCard" title: "Gestion des Déploiements & Tâches" {
+        Card "KanbanCard" title: "Deployment & Task Management" {
             Kanban "DeployBoard" rpcSource: "Tasks.GetBoard" onCardDrop: "Tasks.MoveCard"
         }
     }
@@ -41,24 +41,24 @@ Background "MainWindow" responsive: true minWidth: "500px" maxWidth: "1400px" {
     Divider "Div3"
 
     ResponsiveGrid "BottomToolsGrid" columns: 12 gap: "16px" {
-        Card "EditorCard" title: "Documentation & Changelog" colSpanDesktop: 6 colSpanMobile: 12 {
-            RichEditor "ReleaseNotes" mode: "markdown" minHeight: "180px" placeholder: "Rédigez la notice ou description technique..."
+        Card "EditorCard" title: "Documentation & Release Notes" colSpanDesktop: 6 colSpanMobile: 12 {
+            RichEditor "ReleaseNotes" mode: "markdown" minHeight: "180px" placeholder: "Write documentation or technical notes..."
         }
 
-        Card "StorageCard" title: "Téléversement de Ressources" colSpanDesktop: 6 colSpanMobile: 12 {
+        Card "StorageCard" title: "Resource Upload" colSpanDesktop: 6 colSpanMobile: 12 {
             FileUpload "FirmwareUpload" rpcUpload: "Storage.Upload" maxSize: "50MB"
             Skeleton "LoadingPlaceholder" lines: 2 type: "card"
         }
     }
 
-    Drawer "ConfigDrawer" title: "Paramètres Avancés & Réseau" position: "right" width: "400px" {
-        Text "DrawerNotice" content: "Configuration matérielle et quotas RPC."
+    Drawer "ConfigDrawer" title: "Advanced Settings & Network" position: "right" width: "400px" {
+        Text "DrawerNotice" content: "Hardware configuration and RPC quotas."
         MediaPlayer "PreviewPlayer" type: "image" src: "assets/rack_preview.png"
     }
 
-    Modal "SecurityModal" title: "Vérification d'Accès Matériel" width: "520px" {
-        Text "ModalContent" content: "Le token matériel SHA-256 de votre appareil est actif et infalsifiable."
-        Button "BtnConfirm" text: "Confirmer la Session"
+    Modal "SecurityModal" title: "Hardware Access Verification" width: "520px" {
+        Text "ModalContent" content: "Your device's SHA-256 hardware token is active and verified."
+        Button "BtnConfirm" text: "Confirm Session"
     }
 
     Webview "EscapeHatchPorte" minHeight: "220px"

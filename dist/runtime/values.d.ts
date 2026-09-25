@@ -1,7 +1,7 @@
 import { Statement } from "../parser/ast";
 import { Environment } from "./environment";
 import { Instance } from "./instance";
-export type ValueType = "null" | "number" | "string" | "boolean" | "list" | "fixed_array" | "instance" | "native_fn" | "fn";
+export type ValueType = "null" | "number" | "string" | "boolean" | "list" | "fixed_array" | "instance" | "native_fn" | "fn" | "json" | "hexa" | "thread";
 export interface RuntimeVal {
     type: ValueType;
     value?: any;
@@ -62,8 +62,26 @@ export interface FunctionVal extends RuntimeVal {
     declarationEnv: Environment;
     body: Statement[];
 }
+export interface JsonVal extends RuntimeVal {
+    type: "json";
+    value: any;
+}
+export interface HexaVal extends RuntimeVal {
+    type: "hexa";
+    value: number;
+    hexString: string;
+}
+export interface ThreadVal extends RuntimeVal {
+    type: "thread";
+    id: string;
+    status: "running" | "suspended" | "completed" | "cancelled" | "dead";
+    cancel: () => void;
+}
 export declare function MK_NUMBER(n?: number): NumberVal;
 export declare function MK_STRING(s?: string): StringVal;
 export declare function MK_BOOL(b?: boolean): BooleanVal;
 export declare function MK_NULL(): NullVal;
+export declare function MK_JSON(val?: any): JsonVal;
+export declare function MK_HEXA(val: number | string): HexaVal;
+export declare function MK_THREAD(id: string, cancel: () => void): ThreadVal;
 export declare function MK_NATIVE_FN(call: FunctionCall): NativeFunctionVal;

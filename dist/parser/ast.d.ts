@@ -1,6 +1,7 @@
-export type NodeType = "Program" | "VarDeclaration" | "FunctionDeclaration" | "IfStatement" | "WhileStatement" | "ForInStatement" | "ReturnStatement" | "BlockStatement" | "ExpressionStatement" | "AssignmentExpr" | "BinaryExpr" | "UnaryExpr" | "CallExpr" | "MemberExpr" | "IndexExpr" | "NumericLiteral" | "StringLiteral" | "BooleanLiteral" | "NullLiteral" | "Identifier" | "ListLiteral" | "FixedArrayLiteral" | "NamedArgumentExpr" | "PairExpr" | "ModuleStatement" | "ClassDeclaration" | "NamespaceDeclaration";
+export type NodeType = "Program" | "VarDeclaration" | "FunctionDeclaration" | "IfStatement" | "WhileStatement" | "ForInStatement" | "ReturnStatement" | "BlockStatement" | "ExpressionStatement" | "BreakpointStatement" | "AssignmentExpr" | "BinaryExpr" | "UnaryExpr" | "CallExpr" | "MemberExpr" | "IndexExpr" | "NumericLiteral" | "StringLiteral" | "BooleanLiteral" | "NullLiteral" | "Identifier" | "ListLiteral" | "FixedArrayLiteral" | "JsonObjectLiteral" | "FunctionExpr" | "NamedArgumentExpr" | "PairExpr" | "ModuleStatement" | "ClassDeclaration" | "NamespaceDeclaration";
 export interface Statement {
     kind: NodeType;
+    line?: number;
 }
 export interface Program extends Statement {
     kind: "Program";
@@ -10,7 +11,7 @@ export interface Program extends Statement {
 export interface VarDeclaration extends Statement {
     kind: "VarDeclaration";
     name: string;
-    explicitType: "General" | "int" | "float" | "string" | "bool";
+    explicitType: "General" | "Global" | "int" | "float" | "string" | "bool" | "Json" | "Hexa";
     value?: Expression;
     isList?: boolean;
     isFixedArray?: boolean;
@@ -21,6 +22,7 @@ export interface FunctionDeclaration extends Statement {
     name: string;
     parameters: string[];
     body: Statement[];
+    isOverride?: boolean;
 }
 export interface ModuleStatement extends Statement {
     kind: "ModuleStatement";
@@ -140,4 +142,24 @@ export interface PairExpr extends Expression {
     kind: "PairExpr";
     left: Expression;
     right: Expression;
+}
+export interface BreakpointStatement extends Statement {
+    kind: "BreakpointStatement";
+    label?: string;
+    line?: number;
+}
+export interface FunctionExpr extends Expression {
+    kind: "FunctionExpr";
+    name?: string;
+    parameters: string[];
+    body: Statement[];
+    line?: number;
+}
+export interface JsonObjectLiteral extends Expression {
+    kind: "JsonObjectLiteral";
+    pairs: {
+        key: string;
+        value: Expression;
+    }[];
+    line?: number;
 }

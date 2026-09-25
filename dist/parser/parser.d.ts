@@ -8,6 +8,7 @@ export declare class Parser {
     produceAST(): Program;
     private parseStatement;
     private isTypeKeyword;
+    private parseBreakpointStatement;
     private parseVarDeclaration;
     private parseFunctionDeclaration;
     private parseClassDeclaration;
@@ -32,6 +33,8 @@ export declare class Parser {
     private parseCallMember;
     private parsePrimary;
     private parseExpressionList;
+    private parseBraceLiteral;
+    private parseAnonymousFunction;
     private parseArgumentExpression;
     private parseArgumentValue;
     private peek;

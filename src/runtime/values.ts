@@ -11,7 +11,10 @@ export type ValueType =
   | "fixed_array"
   | "instance"
   | "native_fn"
-  | "fn";
+  | "fn"
+  | "json"
+  | "hexa"
+  | "thread";
 
 export interface RuntimeVal {
   type: ValueType;
@@ -88,6 +91,24 @@ export interface FunctionVal extends RuntimeVal {
   body: Statement[];
 }
 
+export interface JsonVal extends RuntimeVal {
+  type: "json";
+  value: any;
+}
+
+export interface HexaVal extends RuntimeVal {
+  type: "hexa";
+  value: number;
+  hexString: string;
+}
+
+export interface ThreadVal extends RuntimeVal {
+  type: "thread";
+  id: string;
+  status: "running" | "suspended" | "completed" | "cancelled" | "dead";
+  cancel: () => void;
+}
+
 export function MK_NUMBER(n = 0): NumberVal {
   return { type: "number", value: n };
 }
@@ -102,6 +123,36 @@ export function MK_BOOL(b = true): BooleanVal {
 
 export function MK_NULL(): NullVal {
   return { type: "null", value: null };
+}
+
+export function MK_JSON(val: any = {}): JsonVal {
+  return { type: "json", value: val };
+}
+
+export function MK_HEXA(val: number | string): HexaVal {
+  if (typeof val === "number") {
+    const intVal = Math.floor(val);
+    const hex = (intVal >= 0 ? "0x" : "-0x") + Math.abs(intVal).toString(16).toUpperCase();
+    return { type: "hexa", value: intVal, hexString: hex };
+  } else {
+    const str = String(val).trim();
+    const cleanStr = str.startsWith("#") ? str.substring(1) : str;
+    const intVal = parseInt(cleanStr, 16);
+    return {
+      type: "hexa",
+      value: isNaN(intVal) ? 0 : intVal,
+      hexString: str.startsWith("0x") || str.startsWith("0X") ? str : `0x${cleanStr.toUpperCase()}`
+    };
+  }
+}
+
+export function MK_THREAD(id: string, cancel: () => void): ThreadVal {
+  return {
+    type: "thread",
+    id,
+    status: "running",
+    cancel
+  };
 }
 
 export function MK_NATIVE_FN(call: FunctionCall): NativeFunctionVal {

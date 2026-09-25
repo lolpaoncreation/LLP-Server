@@ -33,7 +33,7 @@ export class GlobalNetworkProfiler {
   private constructor() {
     setInterval(() => {
       this.sampleMetrics();
-    }, 1000);
+    }, 1000).unref();
   }
 
   public static getInstance(): GlobalNetworkProfiler {

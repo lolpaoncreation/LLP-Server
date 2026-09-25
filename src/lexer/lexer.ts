@@ -2,12 +2,18 @@ import { Token, TokenType } from "./tokens";
 
 const KEYWORDS: Record<string, TokenType> = {
   General: TokenType.KwGeneral,
-  Global: TokenType.KwGeneral,
+  Global: TokenType.KwGlobal,
   var: TokenType.KwGeneral,
   int: TokenType.KwInt,
   float: TokenType.KwFloat,
   string: TokenType.KwString,
   bool: TokenType.KwBool,
+  Json: TokenType.KwJson,
+  json: TokenType.KwJson,
+  Hexa: TokenType.KwHexa,
+  hexa: TokenType.KwHexa,
+  breakpoint: TokenType.KwBreakpoint,
+  Breakpoint: TokenType.KwBreakpoint,
   if: TokenType.KwIf,
   then: TokenType.KwThen,
   else: TokenType.KwElse,
@@ -32,7 +38,8 @@ const KEYWORDS: Record<string, TokenType> = {
   visibility: TokenType.KwVisibility,
   class: TokenType.KwClass,
   module: TokenType.KwModule,
-  namespace: TokenType.KwNamespace
+  namespace: TokenType.KwNamespace,
+  over: TokenType.KwOver
 };
 
 export class Lexer {
@@ -308,6 +315,14 @@ export class Lexer {
     return char >= '0' && char <= '9';
   }
 
+  private isHexDigit(char: string): boolean {
+    return (
+      (char >= '0' && char <= '9') ||
+      (char >= 'a' && char <= 'f') ||
+      (char >= 'A' && char <= 'F')
+    );
+  }
+
   private isAlpha(char: string): boolean {
     return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char === '_';
   }
@@ -363,6 +378,24 @@ export class Lexer {
     const startLine = this.line;
     const startCol = this.col;
     let numStr = "";
+
+    // Hexadecimal numbers: 0x... or 0X...
+    if (this.source[this.pos] === '0' && (this.peek() === 'x' || this.peek() === 'X')) {
+      numStr += this.source[this.pos]; // '0'
+      this.advance();
+      numStr += this.source[this.pos]; // 'x' or 'X'
+      this.advance();
+      while (this.pos < this.source.length && this.isHexDigit(this.source[this.pos])) {
+        numStr += this.source[this.pos];
+        this.advance();
+      }
+      return {
+        type: TokenType.Number,
+        value: numStr,
+        line: startLine,
+        column: startCol
+      };
+    }
 
     while (this.pos < this.source.length && this.isDigit(this.source[this.pos])) {
       numStr += this.source[this.pos];

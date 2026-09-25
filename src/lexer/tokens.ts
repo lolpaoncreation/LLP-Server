@@ -8,10 +8,15 @@ export enum TokenType {
 
   // Type Keywords
   KwGeneral,   // General
+  KwGlobal,    // Global
   KwInt,       // int
   KwFloat,     // float
   KwString,    // string
   KwBool,      // bool
+  KwJson,      // Json
+  KwHexa,      // Hexa
+  KwBreakpoint,// breakpoint
+  KwTask,      // task
 
   // Keywords
   KwIf,
@@ -32,6 +37,7 @@ export enum TokenType {
   KwClass,
   KwModule,
   KwNamespace,
+  KwOver,
 
   // Grouping & Operators
   Equals,          // =

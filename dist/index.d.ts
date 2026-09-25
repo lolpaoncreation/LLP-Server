@@ -10,3 +10,5 @@ export declare function runFile(filePath: string, options?: {
 export { startGuiApplication } from "./gui/app_runner";
 export { startUiBuilderServer, getUiBuilderHtml } from "./gui/ui_builder";
 export { createProjectStructure, getProjectInfo, ProjectArchitecture, CreateProjectOptions, buildLlpDllBinary, setFileReadOnly, addLibraryToProject, enforceLibDirectoryProtection, cleanNonDllFilesFromLib } from "./project/scaffold";
+export { loadProjectEnvironment, isScriptVisible, parseFileVisibility, findProjectRoot, findProjectScriptFiles } from "./project/visibility";
+export { registerUI, UIElementManager } from "./stdlib/ui_element";

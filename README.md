@@ -13,6 +13,33 @@ Welcome to the official documentation for the **LLP** programming language (*lol
 
 ---
 
+## 🌟 What's New in Version 1.5.9
+
+* 🎨 **Complete UI Text Modification Guide & Dynamic Data Binding**:
+  * Added comprehensive guidelines and examples for editing text across graphical components (`Text`, `Button`, `TextInput`, `Card`, `Checkbox`, `ItemBox`, `ListButton`, `Modal`, `Drawer`, `Toast`) both declaratively in `.illp` code and visually in the UI Builder.
+  * Inline canvas editing (`contentEditable`) and live inspector properties binding.
+* 🧬 **Universal Class & Instance `ToString()` Override Synchronization**:
+  * `func over ToString() then ... end` is now bound simultaneously to instances (`inst.ToString()`) and directly to class objects (`MyClass.ToString()`).
+  * Direct terminal printing (`print(MyClass)`, `print(inst)`) and string concatenation (`"Name: " + obj`) seamlessly invoke custom string overrides without falling back to default file hierarchy paths.
+  * Transparent error reporting for custom `ToString()` methods (`[LLP ToString Execution Error]`) to eliminate silent execution failures.
+* 🔄 **Cross-Folder Project Visibility & `Parent.Parent` Scope**:
+  * **`visibility: All`**: Any file or class declared with `visibility: All` is visible to its `Parent.Parent` (the grandparent/project directory) and to **all recursive descendants and subfolders** of `Parent.Parent`.
+  * **Zero Missing-Symbol Errors**: Fixed `[LLP Runtime Error] Impossible de trouver la variable ou fonction '...'` when executing scripts across directories (e.g. `client/main.llp` accessing `MyClass` in `client/classes/` or sibling folders).
+  * **Automatic Runtime Sync**: VS Code extension's bundled runner (`vscode-extension/dist`) is now automatically kept in 100% sync with the language compiler output on every build.
+* 🧩 **New Data Types (`Json`, `Hexa`) & Refined Global Variable Intervals**:
+  * **`Json` Type**: Native JSON data type with direct dynamic property dot-notation (`data.user.name`, `payload.items[0]`), and utilities `Json.parse()` / `Json.stringify()`.
+  * **`Hexa` Type**: Hexadecimal integer and color type with conversions `Hexa.toInt()` and `Hexa.toHex()`.
+  * **`General` vs `Global`**: Clear semantic differentiation between globals:
+    * `General`: Large interval / dynamic multi-type variable.
+    * `Global`: Small interval / constrained value range.
+* ⏱️ **`Task` Module & Real-time `breakpoint`**:
+  * **`Task` / `task`**: Roblox-inspired task scheduling with `Task.wait(seconds)`, `Task.delay(seconds, func)`, `Task.spawn(func)`, `Task.defer(func)`, and `Task.cancel(thread)`.
+  * **`breakpoint` Statement**: Non-blocking real-time breakpoint inspection allowing developers to view variables live without interrupting parallel tasks or background scripts.
+* 🔍 **Intelligent Autocomplete for Classes & Workspace Symbols**:
+  * Autocomplete engine now scans recursively up to `Parent.Parent` and the full workspace, suggesting both `class ClassName` and constructor shortcuts `ClassName.new()`.
+
+---
+
 ## 📑 Table of Contents
 1. [🌟 The Two Flagship Superpowers of LLP](#-the-two-flagship-superpowers-of-llp)
 2. [Architecture & File Extensions (.llp, .cllp, .illp, .illps, .cllpdb)](#-architecture--file-extensions)
@@ -78,12 +105,12 @@ visibility: All
 
 ### Available Visibility Levels:
 
-* **`visibility: All`** : Completely public and accessible by all scripts across the entire project, regardless of folder depth.
+* **`visibility: All`** : Completely public and accessible across the project. Any script marked with `visibility: All` is visible to its **`Parent.Parent`** (grandparent directory / project root) and to **all children and subfolders** of `Parent.Parent`.
 * **`visibility: Package`** : Visible only to other files residing in the same directory/package.
 * **`visibility: Parent`** : Visible to the parent folder and all of its descendant subfolders.
 * **`visibility: Private`** : Strictly isolated; inaccessible to external files.
 
-Each file dynamically resolves accessible components by computing directory paths against declared visibility directives.
+Each file dynamically resolves accessible components by computing directory paths against declared visibility directives and pre-loading visible scripts before entry execution.
 
 ---
 
@@ -119,26 +146,77 @@ print("Active token:", secretToken) /- Prints 999
 
 ## 🧱 Types & Variables
 
-LLP supports dynamic typing via `General` (or its alias `Global`), as well as strict static typing.
+LLP supports dynamic, semi-dynamic, and static typing tailored for game engines, networked applications, and high-performance computing.
 
-### Simple Variables
+### 1. Simple Variables & Global Range Differentiation
+* **`General`** : Dynamic multi-type variable with a **large value range / interval**, ideal for complex structures, dynamic lists, and large-scale objects.
+* **`Global`** : Variable with a **small / constrained interval**, optimal for lightweight flags, bounded counters, and localized shared state.
+
 ```llp
-General projectName = "Lolpaon Studio" /- Dynamic type
-Global counter = 0                     /- Alias of General
+General projectName = "Lolpaon Studio" /- Large interval dynamic type
+Global counter = 0                     /- Small interval constrained type
 string author = "lolpaon"              /- String
 int year = 2026                        /- Integer
-float version = 1.5                    /- Floating-point number
+float version = 1.58                   /- Floating-point number
 bool isActive = true                   /- Boolean (true / false / null)
 ```
 
-### Universal Constants
+### 2. JSON Type: `Json`
+The `Json` type allows direct object manipulation and dynamic dot-property traversal:
+```llp
+Json user = Json.parse("{\"profile\": {\"name\": \"lolpaon\", \"level\": 99}}")
+
+/- Direct dynamic property access:
+print("Player name:", user.profile.name)
+print("Player level:", user.profile.level)
+
+/- Serialize back to string:
+string serialized = Json.stringify(user)
+```
+
+### 3. Hexadecimal Type: `Hexa`
+Dedicated type for hexadecimal numbers, RGB colors, memory masks, and bitwise operations:
+```llp
+Hexa color = "0xFF5500"
+int intVal = Hexa.toInt(color)           /- 16733440
+string hexString = Hexa.toHex(intVal)    /- "0xFF5500"
+```
+
+### 4. Asynchronous Task Scheduling: `Task` (Roblox-style)
+The `Task` (or `task`) module provides micro-threaded asynchronous scheduling:
+```llp
+/- 1. Non-blocking delay
+General thread = delay(3, func() then
+    print("Executed after 3 seconds!")
+end)
+
+/- 2. Cancel a scheduled task
+task.cancel(thread)
+
+/- 3. Immediate micro-task spawning
+task.spawn(func() then
+    print("Spawned in background thread")
+end)
+
+/- 4. Cooperative wait
+task.wait(1.5)
+```
+
+### 5. Non-Blocking Real-Time Debugging: `breakpoint`
+Allows inspecting variable states live without hanging parallel tasks or terminating server threads:
+```llp
+int currentScore = 150
+breakpoint /- Pauses execution locally to display variable state in terminal/debugger
+```
+
+### 6. Universal Constants
 Constants declared with `visibility: All` (such as `PY` or `PI`) are universally accessible across all user scripts and modules:
 ```llp
 print("Value of PI:", PI)
 print("SciPy/Python constant PY:", PY)
 ```
 
-### Dynamic Sized Lists: `General{}`
+### 7. Dynamic Sized Lists: `General{}`
 ```llp
 General modules = General{"Network", "Database"}
 modules.Add("Graphics")              /- Appends an item
@@ -146,7 +224,7 @@ modules.Remove(0)                    /- Removes item at index 0
 print("Length:", modules.Length())   /- 2
 ```
 
-### Fixed-Capacity Arrays: `General[N]{}`
+### 8. Fixed-Capacity Arrays: `General[N]{}`
 Prevents buffer overflows and unintended memory expansion at runtime:
 ```llp
 General slots = General[3]{"Slot1", "Slot2", "Slot3"}
@@ -306,24 +384,38 @@ class Player then
 end
 ```
 
-### 2. Automatic Hierarchical `ToString()`
+### 2. Automatic Hierarchical `ToString()` & Override with `func over ToString()`
 All classes and instances in LLP inherit a hierarchical `ToString()` method by default:
-* It computes and displays the full ancestral parent chain, tracing backwards from the root parent down to the instance, while including the source file (`.cllp` or `.llp`).
-* Calling `print(myObject)` automatically invokes this hierarchical path:
+* **Base Class Object**: Calling `ToString()` directly on a class (or service) returns its hierarchical identity and file location (e.g. `Player.ToString()` -> `[Player.cllp > Player]`, `App.ToString()` -> `[App]`).
+* **Ancestral Tree Resolution**: An instance computes the ancestral parent chain back to the root parent, including its source file (`.cllp` or `.llp`).
+* **Custom Overrides (`func over ToString()`)**: Any class can redefine its string representation using the `over` keyword:
+* **Automatic Invocation**: Calling `print(myObject)` or concatenating (`"Hero: " + myObject`) automatically calls the custom or default `ToString()`.
 
 ```llp
-General gameRoot = Instance.new("Game")
-gameRoot.Name = "MonJeu"
+visibility: All
 
-General zone = Instance.new("World", gameRoot)
-zone.Name = "RoyaumeDuNord"
+class Player then
+    string Name = "Arthur"
+    int Score = 42
 
-General hero = Player.new(zone)
-hero.Name = "RoiArthur"
+    func over ToString() then
+        return "[Player: " + self.Name + " (Score: " + self.Score + ")]"
+    end
+end
 
-/- Prints: [Player.cllp > MonJeu > RoyaumeDuNord > RoiArthur]
-print(hero)
-print(hero.ToString())
+General hero = Player.new()
+
+/- 1. Explicit invocation:
+print(hero.ToString()) /- [Player: Arthur (Score: 42)]
+
+/- 2. Direct print:
+print(hero)            /- [Player: Arthur (Score: 42)]
+
+/- 3. String concatenation:
+print("Welcome " + hero) /- Welcome [Player: Arthur (Score: 42)]
+
+/- 4. Class type itself:
+print(Player.ToString()) /- [Player.cllp > Player]
 ```
 
 ### 3. Class Packages: `namespace then ... end`
@@ -511,7 +603,335 @@ LLP offers a suite of modern, rich components designed so developers never hit a
 
 ---
 
-### 3. `.illps` Files (Interface lolpaon Style)
+---
+
+### 3. 🎯 Cibler les Éléments Graphiques et Modifier leurs Attributs en LLP
+
+En LLP, vous pouvez **cibler n'importe quel élément graphique** de votre interface (déclaré dans un fichier `.illp` ou créé dynamiquement) et **modifier ses attributs en temps réel** (`txt`, `value`, `placeholder`, `visible`, etc.).
+
+#### 🔍 1. Comment Cibler un Élément Graphique
+
+LLP propose plusieurs syntaxes intuitives et ergonomiques selon vos préférences :
+
+```llp
+// 1. Via le service global UI (Recommandé)
+General btn = UI.GetElement("BtnSignIn")
+
+// 2. Via la fonction globale raccourcie GetElement()
+General userField = GetElement("InputUsername")
+
+// 3. Accès direct par propriété (Hiérarchie style Roblox)
+General resetBtn = UI.BtnReset
+
+// 4. Accès par indexation entre crochets
+General passField = UI["InputPassword"]
+```
+
+> 💡 **Chargement Automatique (`UI.AutoLoad()`)** : Lorsque vous appelez `UI.GetElement()`, LLP charge automatiquement le fichier `.illp` de votre projet (`client/views/main.illp`, `main.illp`, etc.) et transforme chaque composant en `Instance` interactive !
+
+---
+
+#### ✏️ 2. Modifier les Attributs (`txt`, `value`, etc.)
+
+Tous les alias courants sont supportés de manière insensible à la casse pour un confort d'écriture maximal :
+
+##### A. Modifier le Texte (`txt`, `text`, `content`, `title`)
+```llp
+General btn = UI.GetElement("BtnSignIn")
+
+// Toutes ces syntaxes sont équivalentes et synchronisées :
+btn.txt = "Se Connecter Maintenant"
+btn.text = "Se Connecter Maintenant"
+btn.Text = "Se Connecter Maintenant"
+
+// Via la méthode d'instance :
+btn.SetText("Connexion en cours...")
+
+// Directement via le raccourci UI :
+UI.SetText("BtnSignIn", "Connexion Réussie !")
+
+// Lire le texte :
+print("Texte actuel du bouton :", btn.txt)
+print("Via GetText() :", btn.GetText())
+print("Via UI.GetText() :", UI.GetText("BtnSignIn"))
+```
+
+##### B. Modifier la Valeur (`value`, `val`)
+Idéal pour les champs de saisie (`TextInput`), les cases à cocher (`Checkbox`), ou les barres de progression (`ProgressBar`) :
+```llp
+General inputEmail = UI.GetElement("InputUsername")
+
+// Modifier la valeur saisie :
+inputEmail.value = "admin@lolpaon.com"
+inputEmail.val = "admin@lolpaon.com"
+
+// Modifier le placeholder :
+inputEmail.placeholder = "Tapez votre adresse email professionnelle..."
+
+// Pour une barre de progression :
+General bar = UI.GetElement("SystemProgressBar")
+bar.value = 95 /- Met à jour le pourcentage à 95% -/
+
+// Lire la valeur :
+print("Email saisi :", inputEmail.value)
+print("Via GetValue() :", inputEmail.GetValue())
+print("Via UI.GetValue() :", UI.GetValue("InputUsername"))
+```
+
+##### C. Modifier la Visibilité (`visible`, `hidden`)
+```llp
+General modal = UI.GetElement("ProfileModal")
+
+// Masquer ou afficher :
+modal.visible = False
+modal.SetVisible(True)
+UI.SetVisible("ProfileModal", True)
+
+if modal.IsVisible() then
+    print("La fenêtre est actuellement visible.")
+end
+```
+
+---
+
+#### ⚡ 3. Événements Réactifs (`OnClick`, `OnChange`)
+
+Vous pouvez attacher directement des fonctions d'écoute aux éléments graphiques :
+
+```llp
+General btn = UI.GetElement("BtnSignIn")
+
+// Écouter le clic utilisateur
+btn.OnClick(func()
+    print(">>> L'utilisateur a cliqué sur le bouton de connexion !")
+    btn.txt = "Vérification..."
+    
+    General email = UI.GetValue("InputUsername")
+    print("Vérification des identifiants pour :", email)
+end)
+
+// Écouter la frappe en temps réel dans un champ
+General searchInput = UI.GetElement("SearchField")
+searchInput.OnChange(func(nouvelleValeur)
+    print("Recherche en direct :", nouvelleValeur)
+end)
+```
+
+---
+
+#### 🔄 4. Synchronisation 2-Voies en Temps Réel avec le Navigateur
+
+Lorsque vous lancez votre application avec `App.Launch()` ou `UI.Launch()` :
+1. **LLP vers Navigateur** : Dès que votre script LLP modifie `btn.txt = "Nouveau Libellé"`, l'affichage dans le navigateur web se met à jour **immédiatement sans recharger la page**.
+2. **Navigateur vers LLP** : Dès que l'utilisateur tape du texte dans un `TextInput` ou coche une `Checkbox`, la valeur est transmise instantanément au runtime LLP, de sorte que `UI.GetValue("monChamp")` reflète toujours la saisie réelle !
+
+---
+
+### 4. ✍️ Comment Modifier le Texte des Éléments Graphiques (Modes Visuel et Style)
+
+En complément du code LLP ci-dessus, vous pouvez également modifier le texte de vos composants **dans le fichier déclaratif**, **dans le designer visuel**, ou **au niveau du style**.
+
+#### 📋 Tableau des Composants et Attributs Déclaratifs
+
+| Composant | Attribut Déclaratif | Rôle & Description | Exemple de Déclaration |
+| :--- | :--- | :--- | :--- |
+| **`Text`** | `content: "..."` | Libellé, titre, paragraphe ou description | `Text "Title" content: "Bienvenue dans l'application !"` |
+| **`Button`** | `text: "..."` | Intitulé cliquable du bouton | `Button "BtnSave" text: "Enregistrer les modifications"` |
+| **`TextInput`** | `placeholder: "..."` | Texte d'invite (grisé) affiché dans le champ | `TextInput "Field" placeholder: "Entrez votre identifiant..."` |
+| **`Card`** | `title: "..."` | Titre de l'en-tête de la carte ou panneau | `Card "UserCard" title: "Informations Personnelles"` |
+| **`Checkbox`** | `label: "..."` | Libellé affiché à côté de la case à cocher | `Checkbox "Terms" label: "J'accepte les conditions d'utilisation"` |
+| **`ItemBox`** | `default: "..." items: [...]` | Option sélectionnée et liste des choix du menu | `ItemBox "Lang" default: "Français" items: ["Français", "English", "Español"]` |
+| **`ListButton`** | `choices: [...]` | Liste des libellés des boutons à choix multiple | `ListButton "Quiz" choices: ["Option A", "Option B", "Option C"]` |
+| **`Modal`** | `title: "..."` | Titre affiché en haut de la fenêtre modale | `Modal "ConfirmModal" title: "Confirmer la suppression"` |
+| **`Drawer`** | `title: "..."` | Titre du panneau latéral coulissant | `Drawer "MenuDrawer" title: "Menu de Navigation"` |
+| **`Toast`** | `message: "..."` | Texte du message de notification contextuelle | `Toast "SuccessToast" message: "Données synchronisées !"` |
+| **`TagPicker`** | `placeholder: "..."` | Texte d'invite pour la saisie de tags | `TagPicker "Picker" placeholder: "Ajouter un tag..."` |
+| **`Chart`** | `title: "..."` | Titre du graphique de métriques | `Chart "MetricsChart" title: "Statistiques Hebdomadaires"` |
+
+---
+
+#### 🛠️ Les 3 Autres Façons de Modifier le Texte
+
+##### 1. Directement dans le fichier `.illp` (Mode Déclaratif)
+Ouvrez simplement votre fichier `.illp` dans VS Code et modifiez la valeur entre guillemets de l'attribut concerné (`content`, `text`, `placeholder`, `title`, etc.) :
+```illp
+Card "ProfileCard" title: "Mon Compte Utilisateur" {
+    Text "GreetingText" content: "Bonjour, Jean Dupont !"
+    TextInput "EmailInput" placeholder: "jean.dupont@entreprise.com"
+    Button "SubmitButton" text: "Mettre à jour le profil"
+}
+```
+
+##### 2. Dans le UI Builder Visuel via Double-Clic (Édition Directe "In-Place")
+Lorsque vous visualisez votre interface avec la commande `llp builder <mon_fichier.illp>` ou le bouton de prévisualisation de l'extension :
+* **Double-cliquez** directement sur n'importe quel texte, titre de carte ou libellé de bouton dans la fenêtre de rendu.
+* Le texte passe immédiatement en mode d'édition en direct (`contentEditable`).
+* Tapez votre nouveau texte, puis appuyez sur **Entrée** ou cliquez en dehors pour valider.
+* La modification est **automatiquement répercutée et enregistrée** dans votre fichier `.illp` !
+
+##### 3. Dans l'Inspecteur de Propriétés (Volet Latéral Droit)
+Dans le UI Builder :
+* **Cliquez une fois** sur le composant (par exemple un `Button` ou un `TextInput`).
+* Dans le panneau de droite **"Properties Inspector"**, repérez le champ textuel :
+  - Pour un `Button` : modifiez le champ **`text`**.
+  - Pour un `Text` : modifiez le champ **`content`**.
+  - Pour un `TextInput` : modifiez le champ **`placeholder`**.
+  - Pour une `Card`, `Modal` ou `Drawer` : modifiez le champ **`title`**.
+* Le canevas se met à jour en temps réel à chaque caractère saisi.
+
+---
+
+### 5. Styliser le Texte avec les Fichiers `.illps`
+Pour modifier l'apparence graphique du texte (taille, couleur, alignement, graisse), associez un fichier `.illps` du même nom ou lié :
+```illps
+Text#GreetingText {
+    color: #89b4fa
+    fontSize: 20px
+    font: bold
+    align: center
+}
+
+Button#SubmitButton {
+    color: #11111b
+    background: #a6e3a1
+    fontSize: 14px
+```
+
+---
+
+### 6. 🔄 Le Fonctionnement Complet du Développement en LLP : UI ➔ Validation Client ➔ Serveur ➔ UI
+
+Le développement d'une application en LLP suit un modèle d'architecture réactive, modulaire et hautement sécurisé :
+
+```
+┌──────────────────────────┐
+│  1. Interface Graphique  │  (Fichier .illp / UI Builder)
+│     - Champs de saisie   │  L'utilisateur remplit l'interface
+│     - Bouton d'action    │
+└────────────┬─────────────┘
+             │ (Événement OnClick / OnChange)
+             ▼
+┌──────────────────────────┐
+│  2. Logique Client (LLP) │  (client/main.llp)
+│     - Récupération infos │  UI.InputUser.value
+│     - Validation locale  │  Vérification des champs vides, formats...
+│     - Feedback visuel    │  UI.LabelStatus.txt = "Vérification..."
+└────────────┬─────────────┘
+             │ (Appel distant sécurisé RPC ou HTTP)
+             ▼
+┌──────────────────────────┐
+│  3. Serveur Dédié (LLP)  │  (server/main.llp)
+│     - Réception requête  │  Server.RegisterRPC("Auth", "login", ...)
+│     - Validation métier  │  Vérification base .cllpdb, HWID, sessions...
+│     - Réponse structurée │  Retourne { success: true, token: "..." }
+└────────────┬─────────────┘
+             │ (Réponse réseau)
+             ▼
+┌──────────────────────────┐
+│  4. Mise à Jour de l'UI  │  (client/main.llp)
+│     - Affichage succès   │  UI.LabelStatus.txt = "Bienvenue !"
+│     - Navigation/Vues    │  UI.CardAuth.visible = false
+└──────────────────────────┘
+```
+
+#### 📝 Exemple Concret de Code Complet
+
+##### Étape 1 : L'Interface Graphique (`client/views/main.illp`)
+```illp
+visibility: All
+
+Background "MainWindow" responsive: true minWidth: "400px" maxWidth: "700px" {
+    Card "AuthCard" title: "🔐 Connexion Client" {
+        Text "SubText" content: "Veuillez entrer vos identifiants :"
+        TextInput "InputUsername" placeholder: "Nom d'utilisateur..." value: ""
+        TextInput "InputPassword" placeholder: "Mot de passe..." value: "" type: "password"
+        Button "BtnSubmit" text: "Se connecter"
+        Text "LabelFeedback" content: ""
+    }
+}
+```
+
+##### Étape 2 & 4 : La Logique Client & Validation (`client/main.llp`)
+```llp
+visibility: All
+
+func handleLogin() {
+    // 1. Récupération des informations saisies par l'utilisateur
+    General username = UI.InputUsername.value
+    General password = UI.InputPassword.value
+
+    // 2. Validation côté client (immédiate, sans latence réseau)
+    if (username == "") {
+        UI.LabelFeedback.txt = "⚠️ Le nom d'utilisateur ne peut pas être vide."
+        return false
+    }
+    if (password == "") {
+        UI.LabelFeedback.txt = "⚠️ Le mot de passe est obligatoire."
+        return false
+    }
+
+    // 3. Feedback visuel pendant le traitement
+    UI.LabelFeedback.txt = "⏳ Validation auprès du serveur..."
+    UI.BtnSubmit.txt = "Connexion..."
+
+    // 4. Envoi sécurisé au serveur via RPC
+    General res = RPC.Call("Auth.login", username, password)
+
+    // 5. Réception de la réponse serveur et mise à jour de l'UI
+    if (res.success == true) {
+        UI.LabelFeedback.txt = "✅ " + res.message
+        UI.BtnSubmit.txt = "Connecté"
+    } else {
+        UI.LabelFeedback.txt = "❌ Erreur : " + res.message
+        UI.BtnSubmit.txt = "Se connecter"
+    }
+}
+
+// Liaison de l'événement clic
+UI.BtnSubmit.OnClick(handleLogin)
+
+// Lancement de l'application
+App.Launch(WindowSize: 800 : 600, DevMode: False)
+```
+
+##### Étape 3 : Le Serveur Dédié LLP (`server/main.llp`)
+```llp
+visibility: All
+
+print("🛡️ [LLP Server] Démarrage du serveur dédié...")
+
+// 1. Gestionnaire Métier Serveur (Authentification)
+func handleAuthLogin(username, password) {
+    print("🔐 [Serveur] Demande reçue pour l'utilisateur :", username)
+
+    // Validation métier et vérification en base de données sécurisée .cllpdb
+    if (username == "admin" && password == "admin123") {
+        print("✅ [Serveur] Authentification validée pour", username)
+        return {
+            "success": true,
+            "message": "Bienvenue " + username + " !",
+            "token": "SESSION_AUTH_TOKEN_SECURE"
+        }
+    }
+
+    print("⚠️ [Serveur] Identifiants invalides pour", username)
+    return {
+        "success": false,
+        "message": "Identifiants invalides."
+    }
+}
+
+// 2. Enregistrement du service RPC
+Server.RegisterRPC("Auth", "login", handleAuthLogin)
+
+// 3. Écoute réseau
+Server.Listen(8080)
+print("🚀 Serveur prêt et en écoute sur le port 8080.")
+```
+
+---
+
+### 7. `.illps` Files (Interface lolpaon Style)
 The `.illps` stylesheet applies design properties (colors, margins, typography, rounded corners) using tag names and `#id` selectors.
 
 > **Real-time Live Sync**: Whenever you switch back to your `.illp` file, changes made to `.illps` are **instantly integrated and rendered live** in the designer view!

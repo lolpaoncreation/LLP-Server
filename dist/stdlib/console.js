@@ -73,11 +73,47 @@ function formatVal(val) {
             val.elements.map(e => formatVal(e)).join(", ") +
             "}");
     }
-    if (val.type === "instance" && val.instance) {
+    if ((val.type === "instance" || val.type === "native_fn") && val.instance) {
+        const customToString = val.instance.properties.get("ToString");
+        if (customToString) {
+            if (customToString.type === "fn") {
+                try {
+                    const { callLLPFunction } = require("../runtime/interpreter");
+                    const res = callLLPFunction(customToString, [], customToString.declarationEnv);
+                    if (res && res.type === "string")
+                        return res.value;
+                    if (res)
+                        return formatVal(res);
+                }
+                catch { }
+            }
+            else if (customToString.type === "native_fn") {
+                try {
+                    const res = customToString.call([], undefined);
+                    if (res && res.type === "string")
+                        return res.value;
+                    if (res)
+                        return formatVal(res);
+                }
+                catch { }
+            }
+        }
         return val.instance.ToString();
     }
-    if (val.type === "native_fn")
+    if (val.type === "json") {
+        return JSON.stringify(val.value, null, 2);
+    }
+    if (val.type === "hexa") {
+        return val.hexString || `0x${val.value?.toString(16).toUpperCase()}`;
+    }
+    if (val.type === "thread") {
+        return `<Thread [${val.id}] Status: ${val.status}>`;
+    }
+    if (val.type === "native_fn") {
+        if (val.instance)
+            return val.instance.ToString();
         return "<native_fn>";
+    }
     if (val.type === "fn")
         return `<func ${val.name || "anonymous"}>`;
     return JSON.stringify(val);

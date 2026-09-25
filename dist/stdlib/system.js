@@ -40,11 +40,13 @@ const values_1 = require("../runtime/values");
 function registerSystem(env) {
     const sysObj = new instance_1.Instance("SystemService");
     sysObj.Name = "System";
-    sysObj.SetProperty("GetOS", {
+    const getOsFn = {
         type: "native_fn",
         call: () => (0, values_1.MK_STRING)(os.platform())
-    });
-    sysObj.SetProperty("Env", {
+    };
+    sysObj.SetProperty("GetOS", getOsFn);
+    sysObj.SetProperty("GetPlatform", getOsFn);
+    const envFn = {
         type: "native_fn",
         call: (args) => {
             if (args.length < 1 || args[0].type !== "string")
@@ -52,10 +54,31 @@ function registerSystem(env) {
             const val = process.env[args[0].value];
             return val ? (0, values_1.MK_STRING)(val) : (0, values_1.MK_NULL)();
         }
-    });
-    sysObj.SetProperty("Time", {
+    };
+    sysObj.SetProperty("Env", envFn);
+    sysObj.SetProperty("GetEnv", envFn);
+    const timeFn = {
         type: "native_fn",
         call: () => (0, values_1.MK_NUMBER)(Date.now())
+    };
+    sysObj.SetProperty("Time", timeFn);
+    sysObj.SetProperty("GetTimestamp", timeFn);
+    sysObj.SetProperty("Sleep", {
+        type: "native_fn",
+        call: (args) => {
+            const ms = args.length > 0 && args[0].type === "number" ? args[0].value : 0;
+            if (ms > 0) {
+                Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+            }
+            return (0, values_1.MK_NULL)();
+        }
+    });
+    sysObj.SetProperty("Exit", {
+        type: "native_fn",
+        call: (args) => {
+            const code = args.length > 0 && args[0].type === "number" ? args[0].value : 0;
+            process.exit(code);
+        }
     });
     env.declareVar("System", { type: "instance", instance: sysObj }, "General");
 }

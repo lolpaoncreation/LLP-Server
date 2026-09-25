@@ -1,91 +1,91 @@
 visibility: All
 
 /* ===================================================
-   Application Complète : Gestion de Produits Lolpaon Pro
-   Fichier : main.illp
-   Fonctionnalités :
-   - Connexion utilisateur avec mot de passe (.cllpdb)
-   - Surveillance d'inactivité (2 min d'inactivité -> compte à rebours de 45 min)
-   - Recherche et filtrage en temps réel des produits
-   - Ajout et suppression de produits avec persistance dans products.cllpdb
+   Full Application: Product Management (Lolpaon Pro)
+   File: main.illp
+   Features:
+   - User authentication with encrypted database (.cllpdb)
+   - Inactivity session monitoring (2 min idle -> 45 min countdown)
+   - Real-time search and filtering of catalog products
+   - Product addition and deletion with persistence in products.cllpdb
    =================================================== *\
 
 Background "ProductManagementWindow" responsive: true minWidth: "480px" maxWidth: "1200px" minHeight: "860px" {
-    Card "TopBarCard" title: "Lolpaon Store Pro - Gestion de Produits" {
+    Card "TopBarCard" title: "Lolpaon Store Pro - Product Management" {
         Row "TopBarRow" {
-            Text "AppHeaderTitle" content: "📦 Lolpaon Store Pro - Gestion de Produits"
-            Text "HeaderInactivityBadge" content: "🟢 Actif (Inactivité: 2m | Alerte: 45m)"
-            Button "BtnLogout" text: "⮌ Déconnexion"
+            Text "AppHeaderTitle" content: "📦 Lolpaon Store Pro - Product Management"
+            Text "HeaderInactivityBadge" content: "🟢 Active (Idle: 2m | Alert: 45m)"
+            Button "BtnLogout" text: "⮌ Sign Out"
         }
         Row "SessionDetailsRow" {
-            Text "SessionStatusText" content: "Base de données: data/products.cllpdb (Chiffrée AES-256) | Utilisateur connecté: admin (Administrateur)"
+            Text "SessionStatusText" content: "Database: data/products.cllpdb (AES-256 Encrypted) | Connected User: admin (Administrator)"
             ProgressBar "SessionProgressBar" value: 95 max: 100
         }
     }
 
-    Card "StatsKpiCard" title: "Indicateurs Clés de l'Inventaire" {
+    Card "StatsKpiCard" title: "Key Inventory Metrics" {
         Grid "KpiGrid" columns: 3 {
-            Text "KpiTotalProducts" content: "📦 6 Produits Actifs"
-            Text "KpiStockValue" content: "💰 $2,277.29 Valeur en Stock"
-            Text "KpiCategories" content: "🏷️ 3 Catégories Gérées"
+            Text "KpiTotalProducts" content: "📦 6 Active Products"
+            Text "KpiStockValue" content: "💰 $2,277.29 Total Stock Value"
+            Text "KpiCategories" content: "🏷️ 3 Managed Categories"
         }
     }
 
-    Card "CatalogManagementCard" title: "Catalogue des Produits en Base de Données" {
+    Card "CatalogManagementCard" title: "Database Product Catalog" {
         Row "CatalogToolbarRow" {
-            TextInput "ProductSearchInput" placeholder: "🔍 Rechercher par nom ou référence..."
-            ItemBox "CategoryFilterSelect" default: "Toutes les catégories" items: ["Toutes les catégories", "Ordinateurs & PC", "Périphériques", "Audio & Son"]
-            Button "BtnOpenAddModal" text: "➕ Ajouter un Produit"
+            TextInput "ProductSearchInput" placeholder: "🔍 Search by name or reference..."
+            ItemBox "CategoryFilterSelect" default: "All Categories" items: ["All Categories", "Computers & PCs", "Peripherals", "Audio & Sound"]
+            Button "BtnOpenAddModal" text: "➕ Add Product"
         }
 
         Grid "ProductsGridDisplay" columns: 3 {
             Card "CardP1" title: "💻 Pro 16 Laptop" {
-                Text "P1Price" content: "Prix: $1299.99 | Stock: 15 unités"
-                Text "P1Category" content: "Catégorie: Ordinateurs & PC"
+                Text "P1Price" content: "Price: $1299.99 | Stock: 15 units"
+                Text "P1Category" content: "Category: Computers & PCs"
             }
-            Card "CardP2" title: "⌨️ Clavier Mécanique RGB" {
-                Text "P2Price" content: "Prix: $129.50 | Stock: 42 unités"
-                Text "P2Category" content: "Catégorie: Périphériques"
+            Card "CardP2" title: "⌨️ Mechanical RGB Keyboard" {
+                Text "P2Price" content: "Price: $129.50 | Stock: 42 units"
+                Text "P2Category" content: "Category: Peripherals"
             }
-            Card "CardP3" title: "🖱️ Souris Ergonomique Sans Fil" {
-                Text "P3Price" content: "Prix: $59.90 | Stock: 80 unités"
-                Text "P3Category" content: "Catégorie: Périphériques"
+            Card "CardP3" title: "🖱️ Ergonomic Wireless Mouse" {
+                Text "P3Price" content: "Price: $59.90 | Stock: 80 units"
+                Text "P3Category" content: "Category: Peripherals"
             }
-            Card "CardP4" title: "🎧 Casque Réduction de Bruit" {
-                Text "P4Price" content: "Prix: $249.00 | Stock: 28 unités"
-                Text "P4Category" content: "Catégorie: Audio & Son"
+            Card "CardP4" title: "🎧 Noise Cancelling Headphones" {
+                Text "P4Price" content: "Price: $249.00 | Stock: 28 units"
+                Text "P4Category" content: "Category: Audio & Sound"
             }
-            Card "CardP5" title: "🖥️ Écran 27'' 4K Ultra-Sharp" {
-                Text "P5Price" content: "Prix: $449.00 | Stock: 19 unités"
-                Text "P5Category" content: "Catégorie: Ordinateurs & PC"
+            Card "CardP5" title: "🖥️ 27'' 4K Ultra-Sharp Monitor" {
+                Text "P5Price" content: "Price: $449.00 | Stock: 19 units"
+                Text "P5Category" content: "Category: Computers & PCs"
             }
-            Card "CardP6" title: "🎙️ Microphone Studio USB" {
-                Text "P6Price" content: "Prix: $89.90 | Stock: 35 unités"
-                Text "P6Category" content: "Catégorie: Audio & Son"
+            Card "CardP6" title: "🎙️ Studio USB Microphone" {
+                Text "P6Price" content: "Price: $89.90 | Stock: 35 units"
+                Text "P6Category" content: "Category: Audio & Sound"
             }
         }
     }
 
-    Card "AddProductSectionCard" title: "Ajouter un Nouveau Produit (.cllpdb)" {
+    Card "AddProductSectionCard" title: "Add New Product (.cllpdb)" {
         Grid "AddProductFormGrid" columns: 2 {
-            TextInput "InputProductName" placeholder: "Nom du produit (ex: Webcam 4K Pro)..."
-            TextInput "InputProductPrice" placeholder: "Prix unitaire (ex: 89.99)..."
-            TextInput "InputProductStock" placeholder: "Quantité en stock (ex: 50)..."
-            ItemBox "SelectProductCategory" default: "Ordinateurs & PC" items: ["Ordinateurs & PC", "Périphériques", "Audio & Son"]
+            TextInput "InputProductName" placeholder: "Product name (e.g. 4K Webcam Pro)..."
+            TextInput "InputProductPrice" placeholder: "Unit price ($)..."
+            TextInput "InputProductStock" placeholder: "Stock quantity..."
+            ItemBox "SelectProductCategory" default: "Computers & PCs" items: ["Computers & PCs", "Peripherals", "Audio & Sound"]
         }
         Row "AddProductActionsRow" {
-            Button "BtnSubmitProduct" text: "💾 Enregistrer dans la Base .cllpdb"
-            Button "BtnResetForm" text: "Effacer"
+            Button "BtnSubmitProduct" text: "💾 Save to .cllpdb"
+            Button "BtnResetForm" text: "Clear"
         }
     }
 
-    Modal "InactivityAlertModal" title: "⚠️ Alerte Session Inactive" width: "480px" {
-        Text "InactivityModalNotice" content: "Vous n'avez effectué aucune action depuis plus de 2 minutes."
-        Text "InactivityModalCountdown" content: "Temps restant avant déconnexion automatique: 45:00"
+    Modal "InactivityAlertModal" title: "⚠️ Inactive Session Alert" width: "480px" {
+        Text "InactivityModalNotice" content: "You have been inactive for more than 2 minutes."
+        Text "InactivityModalCountdown" content: "Time remaining before auto-logout: 45:00"
         ProgressBar "InactivityCountdownBar" value: 100 max: 100
         Row "InactivityModalButtonsRow" {
-            Button "BtnStayConnected" text: "🟢 Rester Connecté / Je suis actif"
-            Button "BtnConfirmLogout" text: "⮌ Me Déconnecter Maintenant"
+            Button "BtnStayConnected" text: "🟢 Stay Connected"
+            Button "BtnConfirmLogout" text: "⮌ Sign Out Now"
         }
     }
 }

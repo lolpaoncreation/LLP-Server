@@ -1,18 +1,18 @@
 visibility: All
 
 /* ===================================================
-   Interface Lolpaon Style (.illps)
-   Styles appliqués aux conteneurs, sous-conteneurs et composants
-   Directement intégré et appliqué en temps réel dans l'interface .illp
+   Lolpaon Interface Stylesheet (.illps)
+   Styles applied to containers, sub-containers, and widgets
+   Directly integrated and applied in real-time to .illp views
    =================================================== *\
 
-Background.FenetrePrincipale {
+Background.MainWindow {
     background: #181825
     padding: 24px
     responsive: true
 }
 
-Card#CarteEnTete {
+Card#HeaderCard {
     background: #1e1e2e
     border: 1px solid #313244
     borderRadius: 12px
@@ -20,7 +20,7 @@ Card#CarteEnTete {
     marginBottom: 16px
 }
 
-Card#CarteFormulaire {
+Card#ProfileCard {
     background: #1e1e2e
     border: 1px solid #313244
     borderRadius: 12px
@@ -28,7 +28,7 @@ Card#CarteFormulaire {
     marginBottom: 16px
 }
 
-Card#CarteActions {
+Card#ActionsCard {
     background: #1e1e2e
     border: 1px solid #313244
     borderRadius: 12px
@@ -36,25 +36,25 @@ Card#CarteActions {
     marginBottom: 16px
 }
 
-Image#LogoApp {
+Image#AppLogo {
     width: 54px
     height: 54px
     borderRadius: 8px
 }
 
-Text#TitrePrincipal {
+Text#MainTitle {
     color: #cdd6f4
     fontSize: 20px
     font: bold
 }
 
-Text#LabelStatut {
+Text#StatusLabel {
     color: #a6adc8
     fontSize: 13px
     marginBottom: 6px
 }
 
-TextInput#InputIdentifiant {
+TextInput#InputUsername {
     background: #313244
     color: #ffffff
     border: 1px solid #45475a
@@ -62,7 +62,7 @@ TextInput#InputIdentifiant {
     padding: 10px 14px
 }
 
-TextInput#InputMotDePasse {
+TextInput#InputPassword {
     background: #313244
     color: #ffffff
     border: 1px solid #45475a
@@ -70,13 +70,13 @@ TextInput#InputMotDePasse {
     padding: 10px 14px
 }
 
-ListButton#ChoixRole {
+ListButton#RoleChoice {
     background: #45475a
     color: #cdd6f4
     borderRadius: 6px
 }
 
-ItemBox#SelecteurTheme {
+ItemBox#ThemeSelector {
     background: #313244
     color: #fab387
     borderRadius: 8px
@@ -93,7 +93,7 @@ Checkbox#CheckSSL {
     fontSize: 13px
 }
 
-Button#BtnConnexion {
+Button#BtnSignIn {
     background: #89b4fa
     color: #11111b
     fontSize: 15px
@@ -102,7 +102,7 @@ Button#BtnConnexion {
     padding: 10px 20px
 }
 
-Button#BtnAnnuler {
+Button#BtnReset {
     background: #45475a
     color: #cdd6f4
     fontSize: 15px

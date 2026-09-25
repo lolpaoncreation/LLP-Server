@@ -5,55 +5,61 @@ export declare enum TokenType {
     Identifier = 3,
     Null = 4,
     KwGeneral = 5,// General
-    KwInt = 6,// int
-    KwFloat = 7,// float
-    KwString = 8,// string
-    KwBool = 9,// bool
-    KwIf = 10,
-    KwThen = 11,
-    KwElse = 12,
-    KwEnd = 13,
-    KwDo = 14,
-    KwWhile = 15,
-    KwFor = 16,
-    KwIn = 17,
-    KwFunc = 18,
-    KwReturn = 19,
-    KwTrue = 20,
-    KwFalse = 21,
-    KwNull = 22,
-    KwNew = 23,
-    KwVisibility = 24,
-    KwClass = 25,
-    KwModule = 26,
-    KwNamespace = 27,
-    Equals = 28,// =
-    DoubleEquals = 29,// ==
-    NotEquals = 30,// !=
-    Greater = 31,// >
-    GreaterOrEqual = 32,// >=
-    Less = 33,// <
-    LessOrEqual = 34,// <=
-    Plus = 35,// +
-    Minus = 36,// -
-    Star = 37,// *
-    Slash = 38,// /
-    Percent = 39,// %
-    Bang = 40,// !
-    And = 41,// && or and or &
-    Or = 42,// || or or or |
-    Xor = 43,// &| or xor
-    OpenParen = 44,// (
-    CloseParen = 45,// )
-    OpenBrace = 46,// {
-    CloseBrace = 47,// }
-    OpenBracket = 48,// [
-    CloseBracket = 49,// ]
-    Comma = 50,// ,
-    Dot = 51,// .
-    Colon = 52,// :
-    Semicolon = 53,// ;
-    EOF = 54
+    KwGlobal = 6,// Global
+    KwInt = 7,// int
+    KwFloat = 8,// float
+    KwString = 9,// string
+    KwBool = 10,// bool
+    KwJson = 11,// Json
+    KwHexa = 12,// Hexa
+    KwBreakpoint = 13,// breakpoint
+    KwTask = 14,// task
+    KwIf = 15,
+    KwThen = 16,
+    KwElse = 17,
+    KwEnd = 18,
+    KwDo = 19,
+    KwWhile = 20,
+    KwFor = 21,
+    KwIn = 22,
+    KwFunc = 23,
+    KwReturn = 24,
+    KwTrue = 25,
+    KwFalse = 26,
+    KwNull = 27,
+    KwNew = 28,
+    KwVisibility = 29,
+    KwClass = 30,
+    KwModule = 31,
+    KwNamespace = 32,
+    KwOver = 33,
+    Equals = 34,// =
+    DoubleEquals = 35,// ==
+    NotEquals = 36,// !=
+    Greater = 37,// >
+    GreaterOrEqual = 38,// >=
+    Less = 39,// <
+    LessOrEqual = 40,// <=
+    Plus = 41,// +
+    Minus = 42,// -
+    Star = 43,// *
+    Slash = 44,// /
+    Percent = 45,// %
+    Bang = 46,// !
+    And = 47,// && or and or &
+    Or = 48,// || or or or |
+    Xor = 49,// &| or xor
+    OpenParen = 50,// (
+    CloseParen = 51,// )
+    OpenBrace = 52,// {
+    CloseBrace = 53,// }
+    OpenBracket = 54,// [
+    CloseBracket = 55,// ]
+    Comma = 56,// ,
+    Dot = 57,// .
+    Colon = 58,// :
+    Semicolon = 59,// ;
+    EOF = 60
 }
 export interface Token {
     type: TokenType;

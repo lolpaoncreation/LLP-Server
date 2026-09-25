@@ -25,6 +25,11 @@ import { registerSession } from "./stdlib/session";
 import { registerDevice } from "./stdlib/device";
 import { registerOSI } from "./stdlib/osi";
 import { registerPhone } from "./stdlib/phone";
+import { registerJson } from "./stdlib/json_std";
+import { registerHexa } from "./stdlib/hexa_std";
+import { registerTask } from "./stdlib/task";
+import { registerBreakpoint } from "./stdlib/breakpoint_std";
+import { registerUI, UIElementManager } from "./stdlib/ui_element";
 import { RuntimeVal } from "./runtime/values";
 
 export function createGlobalEnvironment(): Environment {
@@ -46,10 +51,15 @@ export function createGlobalEnvironment(): Environment {
   registerSymLlp(env);
   registerProbLlp(env);
   registerGuiApp(env);
+  registerUI(env);
   registerSession(env);
   registerDevice(env);
   registerOSI(env);
   registerPhone(env);
+  registerJson(env);
+  registerHexa(env);
+  registerTask(env);
+  registerBreakpoint(env);
 
   return env;
 }
@@ -61,13 +71,25 @@ export { analyzeSource } from "./diagnostics/analyzer";
 export { formatDiagnosticReport, DiagnosticItem } from "./diagnostics/diagnostic";
 
 export function executeLLP(code: string, globalEnv?: Environment, filePath?: string): RuntimeVal {
-  const env = globalEnv || createGlobalEnvironment();
+  let env = globalEnv;
+  if (!env) {
+    if (filePath && fs.existsSync(filePath)) {
+      try {
+        const { loadProjectEnvironment } = require("./project/visibility");
+        env = loadProjectEnvironment(filePath).env;
+      } catch {
+        env = createGlobalEnvironment();
+      }
+    } else {
+      env = createGlobalEnvironment();
+    }
+  }
   const lexer = new Lexer(code);
   const tokens = lexer.tokenize();
   const parser = new Parser(tokens, filePath);
   const ast = parser.produceAST();
-
-  return evaluate(ast, env);
+  const targetEnv = env || createGlobalEnvironment();
+  return evaluate(ast, targetEnv);
 }
 
 export function runFile(filePath: string, options?: { skipCheck?: boolean }) {
@@ -109,7 +131,9 @@ export function runFile(filePath: string, options?: { skipCheck?: boolean }) {
   }
 
   try {
-    executeLLP(source, undefined, absPath);
+    const { loadProjectEnvironment } = require("./project/visibility");
+    const { env } = loadProjectEnvironment(absPath);
+    executeLLP(source, env, absPath);
   } catch (err: any) {
     console.error("\n================================================================================");
     console.error("🔴 [LLP RUNTIME / PARSER EXCEPTION]");
@@ -134,3 +158,11 @@ export {
   enforceLibDirectoryProtection,
   cleanNonDllFilesFromLib
 } from "./project/scaffold";
+export {
+  loadProjectEnvironment,
+  isScriptVisible,
+  parseFileVisibility,
+  findProjectRoot,
+  findProjectScriptFiles
+} from "./project/visibility";
+export { registerUI, UIElementManager } from "./stdlib/ui_element";

@@ -80,7 +80,7 @@ export function registerFileSystem(env: Environment) {
   const dirObj = new Instance("DirectoryService");
   dirObj.Name = "Directory";
 
-  dirObj.SetProperty("List", {
+  const listFn: RuntimeVal = {
     type: "native_fn",
     call: (args: RuntimeVal[]) => {
       const dirPath = args.length > 0 && args[0].type === "string" ? args[0].value : ".";
@@ -94,7 +94,9 @@ export function registerFileSystem(env: Environment) {
         elements: files.map(f => MK_STRING(f))
       };
     }
-  });
+  };
+  dirObj.SetProperty("List", listFn);
+  dirObj.SetProperty("ListFiles", listFn);
 
   dirObj.SetProperty("Create", {
     type: "native_fn",
@@ -102,6 +104,32 @@ export function registerFileSystem(env: Environment) {
       if (args.length < 1 || args[0].type !== "string") return MK_BOOL(false);
       fs.mkdirSync(args[0].value, { recursive: true });
       return MK_BOOL(true);
+    }
+  });
+
+  dirObj.SetProperty("Exists", {
+    type: "native_fn",
+    call: (args: RuntimeVal[]) => {
+      if (args.length < 1 || args[0].type !== "string") return MK_BOOL(false);
+      try {
+        return MK_BOOL(fs.existsSync(args[0].value) && fs.statSync(args[0].value).isDirectory());
+      } catch {
+        return MK_BOOL(false);
+      }
+    }
+  });
+
+  dirObj.SetProperty("Delete", {
+    type: "native_fn",
+    call: (args: RuntimeVal[]) => {
+      if (args.length < 1 || args[0].type !== "string") return MK_BOOL(false);
+      try {
+        if (fs.existsSync(args[0].value)) {
+          fs.rmSync(args[0].value, { recursive: true, force: true });
+          return MK_BOOL(true);
+        }
+      } catch {}
+      return MK_BOOL(false);
     }
   });
 

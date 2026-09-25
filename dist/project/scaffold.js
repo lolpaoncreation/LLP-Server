@@ -107,12 +107,12 @@ function getProjectInfo(projectDir) {
 function createProjectStructure(options) {
     const { targetDir, projectName, architecture = "client-server", isExample = false, author = process.env.USERNAME || "Developer", dbUser = "root", dbPassword = "root" } = options;
     if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
-        throw new Error(`Le dossier cible '${targetDir}' existe déjà et n'est pas vide.`);
+        throw new Error(`Target directory '${targetDir}' already exists and is not empty.`);
     }
     fs.mkdirSync(targetDir, { recursive: true });
     const filesCreated = [];
     const uniqueKey = crypto.randomBytes(32).toString("hex");
-    // Helper pour écrire des fichiers
+    // Helper to write files
     function writeFile(relPath, content) {
         const fullPath = path.join(targetDir, relPath);
         const parent = path.dirname(fullPath);
@@ -122,7 +122,7 @@ function createProjectStructure(options) {
         fs.writeFileSync(fullPath, content, "utf-8");
         filesCreated.push(relPath);
     }
-    // Initialisation de la BDD cryptée avec les identifiants root choisis par l'utilisateur
+    // Initialize encrypted database with root credentials
     function createSeedDatabase(dbRelPath) {
         const fullDbPath = path.join(targetDir, dbRelPath);
         const dbDir = path.dirname(fullDbPath);
@@ -131,7 +131,7 @@ function createProjectStructure(options) {
         const db = new cllpdb_1.CryptedLolpaonDatabase(fullDbPath, uniqueKey);
         db.initializeNew(dbUser, dbPassword);
         db.startSession(dbUser, dbPassword);
-        // Initialisation d'une table système minimale pour la base de données
+        // Minimal system config table
         db.executeSql("CREATE TABLE config (key VARCHAR PRIMARY KEY, value VARCHAR);");
         db.executeSql(`INSERT INTO config VALUES ("created_at", "${new Date().toISOString()}");`);
         db.executeSql(`INSERT INTO config VALUES ("project_name", "${projectName}");`);
@@ -139,100 +139,172 @@ function createProjectStructure(options) {
         db.save();
         filesCreated.push(dbRelPath);
     }
-    // 1. ARCHITECTURE CLIENT / SERVEUR SÉPARÉ
+    // 1. CLIENT / DEDICATED SERVER ARCHITECTURE
     if (architecture === "client-server") {
         // A. project.config
         const configContent = `[project]
 name = "${projectName}"
-version = "1.5.4"
+version = "1.5.5"
 architecture = "client-server"
 client_entry = "client/main.llp"
 server_entry = "server/main.llp"
 project_key = "${uniqueKey}"
 author = "${author}"
 db_admin = "${dbUser}"
-description = "Projet LLP Architecture Client / Serveur Distant"
+description = "LLP Project - Client / Dedicated Server Architecture"
 `;
         writeFile("project.config", configContent);
-        // B. Dossier client/
+        // B. client/ folder
         const clientMain = `// ===================================================
-// Client Application - Point d'entrée exécutable client
+// Client Application - Executable Client Entry Point
 // ===================================================
 visibility: All
 
 print("===================================================")
-print("🚀 [LLP Client] Lancement de l'application cliente")
+print("🚀 [LLP Client] Démarrage de l'application cliente...")
 print("===================================================")
 
-// 1. Identification de l'appareil client
+// 1. Empreinte matérielle non falsifiable du client
 string clientHwid = Device.GetId()
-print("🔒 Empreinte Matérielle du Client:", clientHwid)
+print("🔒 Client Hardware Fingerprint (HWID):", clientHwid)
 
-// 2. Configuration du serveur distant
+// 2. Configuration du Serveur Dédié
 string serverHost = "127.0.0.1"
 int serverPort = 8080
-print("🌐 Serveur distant configuré:", serverHost, ":", serverPort)
+print("🌐 Serveur cible configuré :", serverHost, ":", serverPort)
 
-// 3. Lancement de la fenêtre d'interface graphique (fond blanc vide)
-print("🎨 Chargement de la vue client/views/main.illp...")
+// 3. Logique Client : Récupération des données, validation et envoi au Serveur
+func handleLoginAction() {
+    // Étape A : Récupérer les informations saisies par l'utilisateur
+    General username = UI.InputUsername.value
+    General password = UI.InputPassword.value
+
+    // Étape B : Validation locale côté client
+    if (username == "") {
+        UI.StatusLabel.txt = "⚠️ Veuillez saisir un nom d'utilisateur."
+        return false
+    }
+    if (password == "") {
+        UI.StatusLabel.txt = "⚠️ Veuillez saisir votre mot de passe."
+        return false
+    }
+
+    // Étape C : Feedback visuel immédiat
+    UI.StatusLabel.txt = "⏳ Vérification auprès du serveur LLP..."
+    UI.BtnLogin.txt = "Connexion..."
+
+    // Étape D : Envoi sécurisé au serveur via RPC
+    General res = RPC.Call("Auth.login", username, password)
+
+    // Étape E : Traitement de la réponse du serveur et mise à jour de l'interface
+    if (res.success == true) {
+        UI.StatusLabel.txt = "✅ " + res.message
+        UI.BtnLogin.txt = "Connecté"
+    } else {
+        UI.StatusLabel.txt = "❌ " + res.message
+        UI.BtnLogin.txt = "Se connecter"
+    }
+}
+
+// Liaison de l'événement clic du bouton
+UI.BtnLogin.OnClick(handleLoginAction)
+
+// 4. Lancement de la fenêtre graphique
+print("🎨 Chargement de la vue client client/views/main.illp...")
 App.Launch(WindowSize: 800 : 600, DevMode: False)
 `;
         writeFile("client/main.llp", clientMain);
         const clientService = `// ===================================================
-// Client Services - Services Réseau Client
+// Client Services - Network Client Services
 // ===================================================
 visibility: All
 
 function ConnectClient(string host, int port) {
-    print("[Client] Connexion vers", host, ":", port)
+    print("[Client] Connecting to", host, ":", port)
     General res = Client.Connect(host, port)
     return res
 }
 `;
         writeFile("client/services/api_client.llp", clientService);
-        // Vues Client (.illp et .illps) : Interface vide fond blanc pur
+        // Client Views (.illp and .illps)
         const clientIllp = `visibility: All
 
-/* Interface Principale (.illp) - Fenêtre vide */
-Background "MainWindow" responsive: true minWidth: "400px" maxWidth: "1200px" minHeight: "300px" {
+/* Main Interface (.illp) - Application Interactive Client-Serveur */
+Background "MainWindow" responsive: true minWidth: "400px" maxWidth: "750px" minHeight: "420px" {
+    Card "AuthCard" title: "🔐 Connexion Client LLP" {
+        Text "SubTitle" content: "Entrez vos identifiants pour communiquer avec le serveur :"
+        TextInput "InputUsername" placeholder: "Nom d'utilisateur..." value: ""
+        TextInput "InputPassword" placeholder: "Mot de passe..." value: "" type: "password"
+        Button "BtnLogin" text: "Se connecter"
+        Text "StatusLabel" content: ""
+    }
 }
 `;
         writeFile("client/views/main.illp", clientIllp);
         const clientIllps = `/* ===================================================
-   Style de l'interface client (.illps)
+   Client Interface Stylesheet (.illps)
    =================================================== */
 visibility: All
 
 Background.MainWindow {
-    background: #ffffff
+    background: #0f111a
+}
+
+Card.AuthCard {
+    background: #181825
+    border: 1px solid #313244
 }
 `;
         writeFile("client/views/main.illps", clientIllps);
-        // C. Dossier server/
+        // C. server/ folder
         const serverMain = `// ===================================================
-// Dedicated Server - Point d'entrée backend & services
+// Dedicated Server - Backend Services Entry Point
 // ===================================================
 visibility: All
 
 print("===================================================")
-print("🛡️ [LLP Server] Démarrage du Serveur Dédié")
+print("🛡️ [LLP Server] Starting Dedicated Server...")
 print("===================================================")
 
 int port = 8080
-print("Ouverture du port d'écoute:", port)
+print("Listening on port:", port)
 
-// 1. Connexion à la base de données sécurisée .cllpdb
+// 1. Connect to Secure Encrypted Database (.cllpdb)
 General db = CLLPDB.Open("server/data/app.cllpdb")
 db.StartSession("${dbUser}", "${dbPassword}")
-print("✅ Base de données locale .cllpdb connectée avec succès (Utilisateur: ${dbUser}).")
+print("✅ Local database .cllpdb connected successfully (User: ${dbUser}).")
 
-// 2. Démarrage de l'écoute réseau
+// 2. Gestionnaire Métier Serveur (Authentification)
+func handleAuthLogin(username, password) {
+    print("🔐 [Serveur] Demande d'authentification reçue pour :", username)
+
+    // Validation métier côté serveur
+    if (username == "admin" && password == "admin123") {
+        print("✅ [Serveur] Authentification réussie pour", username)
+        return {
+            "success": true,
+            "message": "Bienvenue " + username + " ! Session active.",
+            "token": "LLP_TOKEN_SECURE_AUTH"
+        }
+    }
+
+    print("⚠️ [Serveur] Identifiants incorrects pour", username)
+    return {
+        "success": false,
+        "message": "Nom d'utilisateur ou mot de passe incorrect."
+    }
+}
+
+// 3. Enregistrement du service RPC
+Server.RegisterRPC("Auth", "login", handleAuthLogin)
+
+// 4. Start Network Listening
 Server.Listen(port)
-print("🚀 Serveur prêt et en attente des connexions clientes sur le port", port)
+print("🚀 Server ready and listening for incoming client connections on port", port)
 `;
         writeFile("server/main.llp", serverMain);
         const serverService = `// ===================================================
-// Server Services - Logique Métier & Contrôles
+// Server Services - Business Logic & Validation
 // ===================================================
 visibility: All
 
@@ -240,16 +312,16 @@ function VerifyClient(string deviceId) {
     if (deviceId == "") {
         return false
     }
-    print("[Security] Validation de l'appareil client:", deviceId)
+    print("[Security] Validating client device:", deviceId)
     return true
 }
 `;
         writeFile("server/services/data_service.llp", serverService);
-        // Base de données server/data/app.cllpdb avec utilisateur root
+        // Database server/data/app.cllpdb
         createSeedDatabase("server/data/app.cllpdb");
-        // D. Shared / Protocole
+        // D. shared/ protocol
         const sharedProtocol = `// ===================================================
-// Protocol - Constantes et contrats partagés
+// Protocol - Shared Constants and Contracts
 // ===================================================
 visibility: All
 
@@ -261,140 +333,149 @@ string ROLE_ADMIN = "Administrator"
 string ROLE_OPERATOR = "Field Operator"
 `;
         writeFile("shared/protocol.llp", sharedProtocol);
-        // E. Readme du projet
-        const projectReadme = `# 🚀 Projet LLP : ${projectName} (Architecture Client / Serveur Séparé)
+        // E. Project README
+        const projectReadme = `# 🚀 LLP Project : ${projectName} (Client / Dedicated Server Architecture)
 
-Ce projet est structuré selon une architecture **Client / Serveur Distant** :
-* **\`client/\`** : Code de l'application cliente, interface graphique vide (\`.illp\`, \`.illps\`) et services réseau.
-* **\`server/\`** : Scripts du serveur backend, gestion de la base de données chiffrée (\`.cllpdb\`) configurée avec l'utilisateur root **${dbUser}**.
-* **\`shared/\`** : Contrats de communication, protocoles et constantes partagées.
-* **\`lib/\`** : Bibliothèques du langage (.dll) en lecture seule.
+This project is structured according to the **Client / Dedicated Server** architecture:
+* **\`client/\`** : Client application logic, user interface layouts (\`.illp\`, \`.illps\`), and network services.
+* **\`server/\`** : Dedicated backend server scripts and encrypted database (\`.cllpdb\`) configured with root user **${dbUser}**.
+* **\`shared/\`** : Shared communication contracts, RPC protocols, and constants.
+* **\`lib/\`** : Read-only language standard libraries (\`.dll\`).
 
 ---
 
-## 🛠️ Commandes Disponibles
+## 🛠️ Available Commands
 
-### 1. Démarrer le Serveur Dédié :
+### 1. Start the Dedicated Server:
 \`\`\`bash
 llp run server/main.llp
 \`\`\`
 
-### 2. Lancer l'Application Cliente (Mode Graphique) :
+### 2. Launch the Client Application (GUI Mode):
 \`\`\`bash
 llp app client
-# ou
+# or
 llp run client/main.llp --gui
 \`\`\`
 
-### 3. Ouvrir le Visual UI Builder sur l'Interface :
+### 3. Open the Visual UI Builder:
 \`\`\`bash
 llp builder client/views/main.illp
 \`\`\`
 `;
         writeFile("README.md", projectReadme);
     }
-    // 2. ARCHITECTURE MONOLITHIQUE / GLOBALE (TOUT-EN-UN)
+    // 2. MONOLITHIC ARCHITECTURE (STANDALONE ALL-IN-ONE)
     else {
         // A. project.config
         const configContent = `[project]
 name = "${projectName}"
-version = "1.5.4"
+version = "1.5.5"
 architecture = "monolithic"
 entry = "src/main.llp"
 project_key = "${uniqueKey}"
 author = "${author}"
 db_admin = "${dbUser}"
-description = "Projet LLP Architecture Tout-en-un (Monolithique Standalone)"
+description = "LLP Project - Standalone All-in-One Monolithic Architecture"
 `;
         writeFile("project.config", configContent);
-        // B. Dossier src/
+        // B. src/ folder
         const srcMain = `// ===================================================
-// Monolithic Application - Point d'entrée global autonome
+// Monolithic Application - Standalone Entry Point
 // ===================================================
 visibility: All
 
 print("===================================================")
-print("📦 [LLP App] Lancement du Logiciel Tout-en-Un")
+print("📦 [LLP App] Launching All-in-One Application...")
 print("===================================================")
 
-// 1. Initialisation de la base de données locale embarquée
+// 1. Initialize Embedded Local Database
 General db = CLLPDB.Open("src/database/app.cllpdb")
 db.StartSession("${dbUser}", "${dbPassword}")
-print("✅ Base de données locale .cllpdb connectée avec succès (Utilisateur: ${dbUser}).")
+print("✅ Local database .cllpdb connected successfully (User: ${dbUser}).")
 
-// 2. Lancement de la fenêtre d'interface graphique (fond blanc vide)
-print("🎨 Chargement de l'interface src/views/main.illp...")
+// 2. Launch Graphical User Interface Window
+print("🎨 Loading interface src/views/main.illp...")
 App.Launch(WindowSize: 800 : 600, DevMode: False)
 `;
         writeFile("src/main.llp", srcMain);
         const appService = `// ===================================================
-// App Services - Logique interne du logiciel
+// App Services - Internal Business Logic
 // ===================================================
 visibility: All
 
 function LoadApplicationState() {
-    print("[App Service] Chargement de l'état local du logiciel...")
+    print("[App Service] Loading local application state...")
     return true
 }
 `;
         writeFile("src/services/app_service.llp", appService);
-        // Vues src/views/ : Interface vide fond blanc pur
+        // Views src/views/
         const mainIllp = `visibility: All
 
-/* Interface Principale (.illp) - Fenêtre vide */
-Background "MainWindow" responsive: true minWidth: "400px" maxWidth: "1200px" minHeight: "300px" {
+/* Main Interface (.illp) - Application Légère Optimisée (< 1 Mo) */
+Background "MainWindow" responsive: true minWidth: "360px" maxWidth: "720px" minHeight: "280px" {
+    Card "WelcomeCard" title: "⚡ Application LLP" {
+        Text "AppStatus" content: "✓ Application autonome optimisée (Empreinte mémoire < 1 Mo)"
+        Button "ActionBtn" text: "Démarrer"
+    }
 }
 `;
         writeFile("src/views/main.illp", mainIllp);
         const mainIllps = `/* ===================================================
-   Style de l'interface autonome (.illps)
+   Standalone Interface Stylesheet (.illps)
    =================================================== */
 visibility: All
 
 Background.MainWindow {
-    background: #ffffff
+    background: #0f111a
+}
+
+Card.WelcomeCard {
+    background: #181825
+    border: 1px solid #313244
 }
 `;
         writeFile("src/views/main.illps", mainIllps);
-        // Base de données embarquée src/database/app.cllpdb
+        // Embedded database
         createSeedDatabase("src/database/app.cllpdb");
-        // Readme
-        const projectReadme = `# 🚀 Projet LLP : ${projectName} (Architecture Monolithique / Tout-en-Un)
+        // README
+        const projectReadme = `# 🚀 LLP Project : ${projectName} (Standalone Monolithic Architecture)
 
-Ce projet est structuré selon une architecture **Monolithique / Standalone** :
-* La base de données chiffrée (\`src/database/app.cllpdb\`), la logique applicative et l'interface graphique sont packagées ensemble dans un seul logiciel exécutable.
-* Identifiants BDD root configurés : utilisateur **${dbUser}**.
-* **\`lib/\`** : Bibliothèques du langage (.dll) en lecture seule.
+This project is structured according to the **Standalone Monolithic** architecture:
+* The encrypted database (\`src/database/app.cllpdb\`), application logic, and user interface are packaged together in a single standalone app.
+* Root database credentials: user **${dbUser}**.
+* **\`lib/\`** : Read-only language standard libraries (\`.dll\`).
 
 ---
 
-## 🛠️ Commandes Disponibles
+## 🛠️ Available Commands
 
-### 1. Lancer l'Application :
+### 1. Launch the Application:
 \`\`\`bash
 llp app
-# ou
+# or
 llp run src/main.llp --gui
 \`\`\`
 
-### 2. Ouvrir le Visual UI Builder sur l'Interface :
+### 2. Open the Visual UI Builder:
 \`\`\`bash
 llp builder src/views/main.illp
 \`\`\`
 `;
         writeFile("README.md", projectReadme);
     }
-    // C. Dossier build/
+    // C. build/ folder
     const buildDir = path.join(targetDir, "build");
     if (!fs.existsSync(buildDir))
         fs.mkdirSync(buildDir, { recursive: true });
-    // D. Copie des 9 bibliothèques standard .dll en lecture seule dans lib/
+    // D. Copy 9 standard read-only libraries into lib/
     copyBaseLibraries(targetDir, filesCreated);
     return {
         success: true,
         architecture,
         filesCreated,
-        message: `Projet '${projectName}' (${architecture === "client-server" ? "Client / Serveur Séparé" : "Monolithique Global"}) créé avec succès !`
+        message: `Project '${projectName}' (${architecture === "client-server" ? "Client / Dedicated Server" : "Standalone Monolithic"}) created successfully!`
     };
 }
 /**
@@ -479,18 +560,18 @@ function addLibraryToProject(projectDir, libSourceOrName, customContent) {
         fs.copyFileSync(libSourceOrName, destPath);
     }
     else {
-        // Génère une bibliothèque .dll LLP binaire
-        const dllBuf = buildLlpDllBinary(baseName.replace(/\.dll$/i, ""), `Bibliothèque développeur LLP : ${baseName}`, ["Init", "Execute", "Export"]);
+        // Generate binary LLP .dll library
+        const dllBuf = buildLlpDllBinary(baseName.replace(/\.dll$/i, ""), `LLP Developer Library : ${baseName}`, ["Init", "Execute", "Export"]);
         fs.writeFileSync(destPath, dllBuf);
     }
-    // Appliquer le verrouillage lecture seule
+    // Enforce read-only lock
     setFileReadOnly(destPath);
-    // Nettoyer les fichiers non-.dll dans lib/
+    // Clean non-dll files
     cleanNonDllFilesFromLib(libDir);
     return {
         success: true,
         libFile: destPath,
-        message: `Librairie '${baseName}' ajoutée avec succès dans lib/ en lecture seule.`
+        message: `Library '${baseName}' added to lib/ successfully in read-only mode.`
     };
 }
 /**

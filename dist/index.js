@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanNonDllFilesFromLib = exports.enforceLibDirectoryProtection = exports.addLibraryToProject = exports.setFileReadOnly = exports.buildLlpDllBinary = exports.getProjectInfo = exports.createProjectStructure = exports.getUiBuilderHtml = exports.startUiBuilderServer = exports.startGuiApplication = exports.formatDiagnosticReport = exports.analyzeSource = void 0;
+exports.UIElementManager = exports.registerUI = exports.findProjectScriptFiles = exports.findProjectRoot = exports.parseFileVisibility = exports.isScriptVisible = exports.loadProjectEnvironment = exports.cleanNonDllFilesFromLib = exports.enforceLibDirectoryProtection = exports.addLibraryToProject = exports.setFileReadOnly = exports.buildLlpDllBinary = exports.getProjectInfo = exports.createProjectStructure = exports.getUiBuilderHtml = exports.startUiBuilderServer = exports.startGuiApplication = exports.formatDiagnosticReport = exports.analyzeSource = void 0;
 exports.createGlobalEnvironment = createGlobalEnvironment;
 exports.executeLLP = executeLLP;
 exports.runFile = runFile;
@@ -64,6 +64,11 @@ const session_1 = require("./stdlib/session");
 const device_1 = require("./stdlib/device");
 const osi_1 = require("./stdlib/osi");
 const phone_1 = require("./stdlib/phone");
+const json_std_1 = require("./stdlib/json_std");
+const hexa_std_1 = require("./stdlib/hexa_std");
+const task_1 = require("./stdlib/task");
+const breakpoint_std_1 = require("./stdlib/breakpoint_std");
+const ui_element_1 = require("./stdlib/ui_element");
 function createGlobalEnvironment() {
     const env = new environment_1.Environment();
     // Register Standard Library
@@ -82,10 +87,15 @@ function createGlobalEnvironment() {
     (0, symllp_1.registerSymLlp)(env);
     (0, probllp_1.registerProbLlp)(env);
     (0, gui_app_1.registerGuiApp)(env);
+    (0, ui_element_1.registerUI)(env);
     (0, session_1.registerSession)(env);
     (0, device_1.registerDevice)(env);
     (0, osi_1.registerOSI)(env);
     (0, phone_1.registerPhone)(env);
+    (0, json_std_1.registerJson)(env);
+    (0, hexa_std_1.registerHexa)(env);
+    (0, task_1.registerTask)(env);
+    (0, breakpoint_std_1.registerBreakpoint)(env);
     return env;
 }
 const analyzer_1 = require("./diagnostics/analyzer");
@@ -95,12 +105,27 @@ Object.defineProperty(exports, "analyzeSource", { enumerable: true, get: functio
 var diagnostic_2 = require("./diagnostics/diagnostic");
 Object.defineProperty(exports, "formatDiagnosticReport", { enumerable: true, get: function () { return diagnostic_2.formatDiagnosticReport; } });
 function executeLLP(code, globalEnv, filePath) {
-    const env = globalEnv || createGlobalEnvironment();
+    let env = globalEnv;
+    if (!env) {
+        if (filePath && fs.existsSync(filePath)) {
+            try {
+                const { loadProjectEnvironment } = require("./project/visibility");
+                env = loadProjectEnvironment(filePath).env;
+            }
+            catch {
+                env = createGlobalEnvironment();
+            }
+        }
+        else {
+            env = createGlobalEnvironment();
+        }
+    }
     const lexer = new lexer_1.Lexer(code);
     const tokens = lexer.tokenize();
     const parser = new parser_1.Parser(tokens, filePath);
     const ast = parser.produceAST();
-    return (0, interpreter_1.evaluate)(ast, env);
+    const targetEnv = env || createGlobalEnvironment();
+    return (0, interpreter_1.evaluate)(ast, targetEnv);
 }
 function runFile(filePath, options) {
     if (!fs.existsSync(filePath)) {
@@ -139,7 +164,9 @@ function runFile(filePath, options) {
         }
     }
     try {
-        executeLLP(source, undefined, absPath);
+        const { loadProjectEnvironment } = require("./project/visibility");
+        const { env } = loadProjectEnvironment(absPath);
+        executeLLP(source, env, absPath);
     }
     catch (err) {
         console.error("\n================================================================================");
@@ -164,3 +191,12 @@ Object.defineProperty(exports, "setFileReadOnly", { enumerable: true, get: funct
 Object.defineProperty(exports, "addLibraryToProject", { enumerable: true, get: function () { return scaffold_1.addLibraryToProject; } });
 Object.defineProperty(exports, "enforceLibDirectoryProtection", { enumerable: true, get: function () { return scaffold_1.enforceLibDirectoryProtection; } });
 Object.defineProperty(exports, "cleanNonDllFilesFromLib", { enumerable: true, get: function () { return scaffold_1.cleanNonDllFilesFromLib; } });
+var visibility_1 = require("./project/visibility");
+Object.defineProperty(exports, "loadProjectEnvironment", { enumerable: true, get: function () { return visibility_1.loadProjectEnvironment; } });
+Object.defineProperty(exports, "isScriptVisible", { enumerable: true, get: function () { return visibility_1.isScriptVisible; } });
+Object.defineProperty(exports, "parseFileVisibility", { enumerable: true, get: function () { return visibility_1.parseFileVisibility; } });
+Object.defineProperty(exports, "findProjectRoot", { enumerable: true, get: function () { return visibility_1.findProjectRoot; } });
+Object.defineProperty(exports, "findProjectScriptFiles", { enumerable: true, get: function () { return visibility_1.findProjectScriptFiles; } });
+var ui_element_2 = require("./stdlib/ui_element");
+Object.defineProperty(exports, "registerUI", { enumerable: true, get: function () { return ui_element_2.registerUI; } });
+Object.defineProperty(exports, "UIElementManager", { enumerable: true, get: function () { return ui_element_2.UIElementManager; } });

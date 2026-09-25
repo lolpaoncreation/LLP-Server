@@ -4,10 +4,14 @@
 // missing keywords, unclosed blocks, type discrepancies, and typos.
 // ===================================================
 
+import * as fs from "fs";
+import * as path from "path";
 import { DiagnosticItem, findClosestMatch } from "./diagnostic";
 
 const KNOWN_MODULES: { [module: string]: string[] } = {
-  App: ["Launch", "Lock", "Silence", "Close"],
+  App: ["Launch", "Run", "Open", "Lock", "Silence", "Close", "ToString"],
+  Interface: ["Launch", "Run", "Open", "Lock", "Silence", "Close", "GetElement", "Get", "Find", "GetElementById", "SetText", "GetText", "SetValue", "GetValue", "SetVisible", "GetAllElements", "CreateElement", "Load", "AutoLoad", "ToString"],
+  UI: ["GetElement", "Get", "Find", "GetElementById", "SetText", "GetText", "SetValue", "GetValue", "SetVisible", "GetAllElements", "CreateElement", "Load", "AutoLoad", "ToString"],
   CLLPDB: ["Open"],
   Database: ["Open", "Execute", "Query"],
   Session: ["Start", "Set", "Get", "Has", "Remove", "Clear", "Save", "Destroy", "Id", "GetAll"],
@@ -19,10 +23,10 @@ const KNOWN_MODULES: { [module: string]: string[] } = {
   SciLlp: ["Mean", "StdDev", "Variance", "Median", "MovingAverage", "Integrate", "Derivative", "LinearRegression", "SignalFilter", "Normalize"],
   SymLlp: ["Solve", "Derivative", "Integral", "Simplify", "Expand", "MatrixDet"],
   ProbLlp: ["Factorial", "Permutations", "Combinations", "NormalPDF", "NormalCDF", "Binomial", "Poisson", "Uniform", "Choice", "Sample"],
-  Crypto: ["GetProjectKey", "GenerateKey", "Encrypt", "Decrypt", "ComputeHash"],
+  Crypto: ["GetProjectKey", "GenerateKey", "Encrypt", "Decrypt", "ComputeHash", "Hash"],
   File: ["Read", "Write", "Append", "Exists", "Delete"],
-  Directory: ["Create", "Exists", "ListFiles", "Delete"],
-  System: ["Sleep", "Exit", "GetEnv", "GetPlatform", "GetTimestamp", "Time"],
+  Directory: ["Create", "Exists", "ListFiles", "List", "Delete"],
+  System: ["Sleep", "Exit", "GetEnv", "Env", "GetPlatform", "GetOS", "GetTimestamp", "Time"],
   UIValidator: ["ValidateRequired", "ValidateNumber", "ValidateEmail", "ShowSuccess", "ShowError"],
   Instance: ["new", "FindFirstChild", "GetChildren", "SetProperty", "GetProperty"],
   Console: ["Log", "Error", "Warn", "Clear"],
@@ -34,16 +38,23 @@ const KNOWN_MODULES: { [module: string]: string[] } = {
   NetOptimizer: ["PackBinary", "Compress", "Decompress", "AnalyzePayload"],
   NetworkProfiler: ["GetBytesReceived", "GetBytesSent", "GetPacketsReceived", "GetPacketsSent", "GetStats", "Reset"],
   Phone: ["On", "Off", "Emit", "OnIncomingCall", "OnCallAnswered", "OnCallEnded", "OnCallStateChanged", "Dial", "Answer", "Hangup", "GetCallState", "SimulateIncomingCall", "GetAudioInputs", "GetAudioOutputs", "SetAudioRoute", "GetAudioRoute", "StartRecording", "StopRecording", "IsRecording", "SetVolume", "GetVolume", "PlayAudio", "GetCameras", "CapturePhoto", "SetFlashlight", "Vibrate", "GetBattery", "GetGPS", "GetNetworkInfo"],
-  ProcessIO: ["Spawn", "OnStdout", "OnStderr", "OnExit", "WriteStdin", "Kill", "GetActiveProcesses"]
+  ProcessIO: ["Spawn", "OnStdout", "OnStderr", "OnExit", "WriteStdin", "Kill", "GetActiveProcesses"],
+  Task: ["wait", "delay", "spawn", "defer", "cancel"],
+  task: ["wait", "delay", "spawn", "defer", "cancel"],
+  Json: ["parse", "stringify", "new"],
+  JSON: ["parse", "stringify", "new"],
+  Hexa: ["toInt", "toHex", "new"],
+  hexa: ["toInt", "toHex", "new"]
 };
 
 const GLOBAL_KEYWORDS = [
-  "General", "Global", "int", "float", "string", "bool",
+  "General", "Global", "int", "float", "string", "bool", "Json", "Hexa",
   "if", "then", "else", "end", "do", "while", "for", "in",
   "func", "return", "true", "True", "false", "False",
   "null", "Null", "new", "visibility", "print", "input", "PY", "PI", "RPC",
   "Bitwise", "ByteBuffer", "Ethernet", "IP", "Socket", "NetOptimizer", "NetworkProfiler",
-  "Phone", "ProcessIO"
+  "Phone", "ProcessIO", "Task", "task", "wait", "delay", "spawn", "breakpoint", "over",
+  "UI", "GetElement"
 ];
 
 interface DelimiterItem {
@@ -60,6 +71,29 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
   const declaredVariables = new Set<string>();
   const declaredFunctions = new Set<string>();
   const declaredClasses = new Set<string>();
+
+  if (filePath && fs.existsSync(filePath)) {
+    try {
+      const { findProjectRoot, findProjectScriptFiles, isScriptVisible } = require("../project/visibility");
+      const root = findProjectRoot(filePath);
+      const scripts = findProjectScriptFiles(root);
+      for (const s of scripts) {
+        if (isScriptVisible(s, filePath)) {
+          const content = fs.readFileSync(s, "utf-8");
+          const sLines = content.split(/\r?\n/);
+          for (const line of sLines) {
+            const trimmed = line.trim();
+            const fMatch = trimmed.match(/^(?:func|function)\s+(?:over\s+)?([a-zA-Z_][a-zA-Z0-9_]*)/);
+            if (fMatch) declaredFunctions.add(fMatch[1]);
+            const cMatch = trimmed.match(/^class\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
+            if (cMatch) declaredClasses.add(cMatch[1]);
+            const vMatch = trimmed.match(/^(?:General|Global|int|float|string|bool|Json|Hexa)\s*(?:\[.*?\])?\s*([a-zA-Z_][a-zA-Z0-9_]*)/);
+            if (vMatch && vMatch[1]) declaredVariables.add(vMatch[1]);
+          }
+        }
+      }
+    } catch {}
+  }
 
   // Delimiter tracking stacks
   const parenStack: DelimiterItem[] = [];
@@ -275,9 +309,9 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
       }
     }
 
-    // 9. Function Declaration: func / function name(params) { or then
+    // 9. Function Declaration: func / function [over] name(params) { or then
     if (trimmed.startsWith("func ") || trimmed === "func" || trimmed.startsWith("function ") || trimmed === "function") {
-      const funcMatch = trimmed.match(/^(?:func|function)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\((.*?)\)/);
+      const funcMatch = trimmed.match(/^(?:func|function)\s+(?:over\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\((.*?)\)/);
       if (!funcMatch) {
         diagnostics.push({
           file: filePath,
@@ -293,7 +327,8 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
       } else {
         const fnName = funcMatch[1];
         declaredFunctions.add(fnName);
-        if (!trimmed.includes("{") && !trimmed.endsWith("then")) {
+        const codeClean = trimmed.replace(/\/\/.*$/, "").replace(/\/-.*\\/, "").trim();
+        if (!codeClean.includes("{") && !codeClean.endsWith("then")) {
           diagnostics.push({
             file: filePath,
             line: lineNum,
@@ -305,7 +340,7 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
             missing: "Mot-clé 'then' ou accolade ouvrante '{' après les paramètres.",
             fix: `Ajoutez 'then' à la fin de la déclaration :\n    function ${fnName}(${funcMatch[2]}) then`
           });
-        } else if (trimmed.endsWith("then") && !trimmed.includes("{")) {
+        } else if (codeClean.endsWith("then") && !codeClean.includes("{")) {
           blockStack.push({ char: `function ${fnName}`, line: lineNum, col: 1, blockType: "function" });
         }
       }
@@ -317,7 +352,8 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
       if (classMatch) {
         const className = classMatch[1];
         declaredClasses.add(className);
-        if (trimmed.endsWith("then") && !trimmed.includes("{")) {
+        const codeClean = trimmed.replace(/\/\/.*$/, "").replace(/\/-.*\\/, "").trim();
+        if (codeClean.endsWith("then") && !codeClean.includes("{")) {
           blockStack.push({ char: `class ${className}`, line: lineNum, col: 1, blockType: "class" });
         }
       }
@@ -328,7 +364,8 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
       const modMatch = trimmed.match(/^module\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
       if (modMatch) {
         const modName = modMatch[1];
-        if (trimmed.endsWith("then") && !trimmed.includes("{")) {
+        const codeClean = trimmed.replace(/\/\/.*$/, "").replace(/\/-.*\\/, "").trim();
+        if (codeClean.endsWith("then") && !codeClean.includes("{")) {
           blockStack.push({ char: `module ${modName}`, line: lineNum, col: 1, blockType: "module" });
         }
       }
@@ -336,17 +373,18 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
 
     // 9d. Namespace Declaration: namespace Name then
     if (trimmed.startsWith("namespace ") || trimmed === "namespace") {
-      const nsMatch = trimmed.match(/^namespace\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
+      const nsMatch = trimmed.match(/^(?:package|namespace)\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
       if (nsMatch) {
         const nsName = nsMatch[1];
-        if (trimmed.endsWith("then") && !trimmed.includes("{")) {
+        const codeClean = trimmed.replace(/\/\/.*$/, "").replace(/\/-.*\\/, "").trim();
+        if (codeClean.endsWith("then") && !codeClean.includes("{")) {
           blockStack.push({ char: `namespace ${nsName}`, line: lineNum, col: 1, blockType: "namespace" });
         }
       }
     }
 
     // 10. Variable Declaration
-    const varMatch = trimmed.match(/^(General|Global|int|float|string|bool)\s*(\[.*?\])?\s*([a-zA-Z_][a-zA-Z0-9_]*)?(\s*=\s*(.*))?$/);
+    const varMatch = trimmed.match(/^(General|Global|int|float|string|bool|Json|Hexa)\s*(\[.*?\])?\s*([a-zA-Z_][a-zA-Z0-9_]*)?(\s*=\s*(.*))?$/);
     if (varMatch) {
       const typeKw = varMatch[1];
       const arrayBracket = varMatch[2];
@@ -471,7 +509,7 @@ export function analyzeSource(source: string, filePath: string = "source.llp"): 
       // Check if caller is a known module
       if (KNOWN_MODULES[caller]) {
         const validMethods = KNOWN_MODULES[caller];
-        if (!validMethods.includes(method)) {
+        if (method !== "ToString" && !validMethods.includes(method)) {
           const closest = findClosestMatch(method, validMethods, 3);
           const suggestion = closest ? `Vouliez-vous dire '${caller}.${closest}()' ?` : `Méthodes disponibles : ${validMethods.join(", ")}`;
           diagnostics.push({

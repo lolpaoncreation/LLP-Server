@@ -1,13 +1,49 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReturnValue = void 0;
+exports.unwrapRuntimeVal = unwrapRuntimeVal;
+exports.wrapRawValue = wrapRawValue;
 exports.evaluate = evaluate;
 exports.evalBlockStatements = evalBlockStatements;
 exports.callLLPFunction = callLLPFunction;
 const environment_1 = require("./environment");
 const instance_1 = require("./instance");
 const instance_std_1 = require("../stdlib/instance_std");
+const debugger_1 = require("./debugger");
 const values_1 = require("./values");
+function unwrapRuntimeVal(val) {
+    if (!val || val.type === "null")
+        return null;
+    if (val.type === "number" || val.type === "string" || val.type === "boolean")
+        return val.value;
+    if (val.type === "json")
+        return val.value;
+    if (val.type === "hexa")
+        return val.hexString || val.value;
+    if (val.type === "list" && val.elements) {
+        return val.elements.map(e => (e ? unwrapRuntimeVal(e) : null));
+    }
+    if (val.type === "fixed_array" && val.elements) {
+        return val.elements.map(e => (e ? unwrapRuntimeVal(e) : null));
+    }
+    if (val.type === "instance" && val.instance)
+        return val.instance.ToString();
+    return val.value ?? val;
+}
+function wrapRawValue(val) {
+    if (val === null || val === undefined)
+        return (0, values_1.MK_NULL)();
+    if (typeof val === "number")
+        return (0, values_1.MK_NUMBER)(val);
+    if (typeof val === "string")
+        return (0, values_1.MK_STRING)(val);
+    if (typeof val === "boolean")
+        return (0, values_1.MK_BOOL)(val);
+    if (typeof val === "object") {
+        return { type: "json", value: val };
+    }
+    return (0, values_1.MK_NULL)();
+}
 class ReturnValue {
     value;
     constructor(value) {
@@ -16,6 +52,7 @@ class ReturnValue {
 }
 exports.ReturnValue = ReturnValue;
 function evaluate(astNode, env) {
+    debugger_1.Debugger.checkBeforeStatement(astNode, env);
     switch (astNode.kind) {
         case "Program":
             return evalProgram(astNode, env);
@@ -23,6 +60,33 @@ function evaluate(astNode, env) {
             return evalVarDeclaration(astNode, env);
         case "FunctionDeclaration":
             return evalFunctionDeclaration(astNode, env);
+        case "BreakpointStatement": {
+            const bp = astNode;
+            debugger_1.Debugger.hitBreakpoint(env, bp.line, bp.label);
+            return (0, values_1.MK_NULL)();
+        }
+        case "FunctionExpr": {
+            const fn = astNode;
+            return {
+                type: "fn",
+                name: fn.name || "anonymous",
+                parameters: fn.parameters,
+                declarationEnv: env,
+                body: fn.body
+            };
+        }
+        case "JsonObjectLiteral": {
+            const objNode = astNode;
+            const obj = {};
+            for (const pair of objNode.pairs) {
+                const val = evaluate(pair.value, env);
+                obj[pair.key] = unwrapRuntimeVal(val);
+            }
+            return {
+                type: "json",
+                value: obj
+            };
+        }
         case "IfStatement":
             return evalIfStatement(astNode, env);
         case "WhileStatement":
@@ -120,6 +184,9 @@ function evalFunctionDeclaration(declaration, env) {
         declarationEnv: env,
         body: declaration.body
     };
+    if (env.hasVar(declaration.name)) {
+        return env.assignVar(declaration.name, fnVal);
+    }
     return env.declareVar(declaration.name, fnVal, "General");
 }
 function evalIfStatement(stmt, env) {
@@ -270,14 +337,28 @@ function evalAssignment(node, env) {
             obj.instance.SetProperty(member.property, value);
             return value;
         }
+        if (obj.type === "json" && typeof obj.value === "object" && obj.value !== null) {
+            obj.value[member.property] = unwrapRuntimeVal(value);
+            return value;
+        }
         throw new Error(`[LLP Assignment Error] Impossible d'assigner la propriété '${member.property}' sur le type ${obj.type}.`);
     }
     if (node.target.kind === "IndexExpr") {
         const indexExpr = node.target;
         const arrVal = evaluate(indexExpr.array, env);
         const idxVal = evaluate(indexExpr.index, env);
+        if (arrVal.type === "json" && typeof arrVal.value === "object" && arrVal.value !== null) {
+            const k = idxVal.type === "number" ? idxVal.value : idxVal.value;
+            arrVal.value[k] = unwrapRuntimeVal(value);
+            return value;
+        }
+        if ((arrVal.type === "instance" || arrVal.type === "native_fn") && arrVal.instance) {
+            const k = String(idxVal.value ?? idxVal);
+            arrVal.instance.SetProperty(k, value);
+            return value;
+        }
         if (idxVal.type !== "number") {
-            throw new Error("[LLP Index Error] L'index doit être un nombre.");
+            throw new Error("[LLP Index Error] L'index doit être un nombre ou une clé valide.");
         }
         const idx = Math.floor(idxVal.value);
         if (arrVal.type === "list" && arrVal.elements) {
@@ -433,13 +514,90 @@ function evalMemberExpr(node, env) {
             };
         }
     }
+    if (obj.type === "json") {
+        if (obj.value === null || obj.value === undefined)
+            return (0, values_1.MK_NULL)();
+        if (node.property === "Length") {
+            if (Array.isArray(obj.value)) {
+                return {
+                    type: "native_fn",
+                    call: () => (0, values_1.MK_NUMBER)(obj.value.length)
+                };
+            }
+        }
+        if (node.property === "Keys") {
+            return {
+                type: "native_fn",
+                call: () => ({
+                    type: "list",
+                    elementType: "string",
+                    elements: Object.keys(obj.value).map(k => (0, values_1.MK_STRING)(k))
+                })
+            };
+        }
+        if (node.property === "ToString") {
+            return {
+                type: "native_fn",
+                call: () => (0, values_1.MK_STRING)(JSON.stringify(obj.value))
+            };
+        }
+        const sub = obj.value[node.property];
+        return wrapRawValue(sub);
+    }
+    if (obj.type === "thread") {
+        if (node.property === "Status" || node.property === "status") {
+            return (0, values_1.MK_STRING)(obj.status);
+        }
+        if (node.property === "Id" || node.property === "id") {
+            return (0, values_1.MK_STRING)(obj.id);
+        }
+        if (node.property === "Cancel" || node.property === "cancel") {
+            return {
+                type: "native_fn",
+                call: () => {
+                    if (obj.cancel)
+                        obj.cancel();
+                    return (0, values_1.MK_NULL)();
+                }
+            };
+        }
+    }
+    if (obj.type === "hexa") {
+        if (node.property === "ToHex" || node.property === "toHex") {
+            return {
+                type: "native_fn",
+                call: () => (0, values_1.MK_STRING)(obj.hexString)
+            };
+        }
+        if (node.property === "ToInt" || node.property === "toInt") {
+            return {
+                type: "native_fn",
+                call: () => (0, values_1.MK_NUMBER)(obj.value)
+            };
+        }
+        if (node.property === "ToString" || node.property === "toString") {
+            return {
+                type: "native_fn",
+                call: () => (0, values_1.MK_STRING)(obj.hexString)
+            };
+        }
+    }
     return (0, values_1.MK_NULL)();
 }
 function evalIndexExpr(node, env) {
     const arrayVal = evaluate(node.array, env);
     const indexVal = evaluate(node.index, env);
+    if (arrayVal.type === "json" && arrayVal.value !== null && arrayVal.value !== undefined) {
+        const key = indexVal.type === "number" ? indexVal.value : indexVal.value;
+        const sub = arrayVal.value[key];
+        return wrapRawValue(sub);
+    }
+    if ((arrayVal.type === "instance" || arrayVal.type === "native_fn") && arrayVal.instance) {
+        const key = String(indexVal.value ?? indexVal);
+        return arrayVal.instance.GetProperty(key);
+    }
     if (indexVal.type !== "number") {
-        throw new Error("[LLP Index Error] L'index doit être un nombre.");
+        throw new Error("[LLP Index Error] L'index doit être un nombre ou une clé valide.");
     }
     const idx = Math.floor(indexVal.value);
     if (arrayVal.type === "list" && arrayVal.elements) {
@@ -487,7 +645,39 @@ function formatValForString(val) {
     if (val.type === "number" || val.type === "string" || val.type === "boolean") {
         return String(val.value);
     }
-    if (val.type === "instance" && val.instance) {
+    if (val.type === "json") {
+        return JSON.stringify(val.value);
+    }
+    if (val.type === "hexa") {
+        return val.hexString || `0x${val.value?.toString(16).toUpperCase()}`;
+    }
+    if (val.type === "thread") {
+        return `<Thread [${val.id}] Status: ${val.status}>`;
+    }
+    if ((val.type === "instance" || val.type === "native_fn") && val.instance) {
+        const customToString = val.instance.properties.get("ToString");
+        if (customToString) {
+            if (customToString.type === "fn") {
+                try {
+                    const res = callLLPFunction(customToString, [], customToString.declarationEnv);
+                    if (res && res.type === "string")
+                        return res.value;
+                    if (res)
+                        return formatValForString(res);
+                }
+                catch { }
+            }
+            else if (customToString.type === "native_fn") {
+                try {
+                    const res = customToString.call([], undefined);
+                    if (res && res.type === "string")
+                        return res.value;
+                    if (res)
+                        return formatValForString(res);
+                }
+                catch { }
+            }
+        }
         return val.instance.ToString();
     }
     return JSON.stringify(val);
@@ -552,6 +742,29 @@ function evalClassDeclaration(stmt, env) {
         call: (args, cEnv) => construct(args, cEnv)
     });
     (0, instance_std_1.attachInstanceMethods)(classObj);
+    // Bind class-level properties and methods (e.g. func over ToString()) to classObj
+    const classEnv = new environment_1.Environment(env);
+    classEnv.declareVar("self", { type: "instance", instance: classObj }, "General");
+    for (const memberStmt of stmt.body) {
+        if (memberStmt.kind === "VarDeclaration") {
+            const vDecl = memberStmt;
+            const vVal = vDecl.value ? evaluate(vDecl.value, classEnv) : (0, values_1.MK_NULL)();
+            classObj.SetProperty(vDecl.name, vVal);
+            classEnv.declareVar(vDecl.name, vVal, "General");
+        }
+        else if (memberStmt.kind === "FunctionDeclaration") {
+            const fnDecl = memberStmt;
+            const classFnVal = {
+                type: "fn",
+                name: fnDecl.name,
+                parameters: fnDecl.parameters || [],
+                declarationEnv: classEnv,
+                body: fnDecl.body
+            };
+            classObj.SetProperty(fnDecl.name, classFnVal);
+            classEnv.declareVar(fnDecl.name, classFnVal, "General");
+        }
+    }
     const classVal = {
         type: "native_fn",
         name: className,

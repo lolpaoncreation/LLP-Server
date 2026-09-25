@@ -29,9 +29,12 @@ class Parser {
     }
     parseStatement() {
         const token = this.peek();
-        // Variable declaration: General, int, float, string, bool
+        // Variable declaration: General, Global, int, float, string, bool, Json, Hexa
         if (this.isTypeKeyword(token.type)) {
             return this.parseVarDeclaration();
+        }
+        if (token.type === tokens_1.TokenType.KwBreakpoint) {
+            return this.parseBreakpointStatement();
         }
         if (token.type === tokens_1.TokenType.KwFunc) {
             return this.parseFunctionDeclaration();
@@ -64,10 +67,33 @@ class Parser {
     }
     isTypeKeyword(type) {
         return (type === tokens_1.TokenType.KwGeneral ||
+            type === tokens_1.TokenType.KwGlobal ||
             type === tokens_1.TokenType.KwInt ||
             type === tokens_1.TokenType.KwFloat ||
             type === tokens_1.TokenType.KwString ||
-            type === tokens_1.TokenType.KwBool);
+            type === tokens_1.TokenType.KwBool ||
+            type === tokens_1.TokenType.KwJson ||
+            type === tokens_1.TokenType.KwHexa);
+    }
+    parseBreakpointStatement() {
+        const tok = this.advance(); // breakpoint
+        let label;
+        if (this.peek().type === tokens_1.TokenType.OpenParen) {
+            this.advance(); // (
+            if (this.peek().type === tokens_1.TokenType.String) {
+                label = this.advance().value;
+            }
+            this.expect(tokens_1.TokenType.CloseParen, "')' attendu après le point d'arrêt.");
+        }
+        else if (this.peek().type === tokens_1.TokenType.String) {
+            label = this.advance().value;
+        }
+        this.skipOptionalSemicolon();
+        return {
+            kind: "BreakpointStatement",
+            label,
+            line: tok.line
+        };
     }
     parseVarDeclaration() {
         const typeToken = this.advance();
@@ -101,11 +127,17 @@ class Parser {
             value,
             isList,
             isFixedArray,
-            maxElements
+            maxElements,
+            line: typeToken.line
         };
     }
     parseFunctionDeclaration() {
         this.advance(); // func
+        let isOverride = false;
+        if (this.peek().type === tokens_1.TokenType.KwOver || this.peek().value === "over") {
+            this.advance(); // over
+            isOverride = true;
+        }
         const nameToken = this.expect(tokens_1.TokenType.Identifier, "Nom de fonction attendu.");
         this.expect(tokens_1.TokenType.OpenParen, "'(' attendu après le nom de fonction.");
         const parameters = [];
@@ -131,21 +163,21 @@ class Parser {
             const block = this.parseBlockStatement();
             body = block.body;
         }
-        else if (this.peek().type === tokens_1.TokenType.KwThen) {
-            this.advance(); // then
+        else {
+            if (this.peek().type === tokens_1.TokenType.KwThen) {
+                this.advance(); // optional 'then'
+            }
             while (this.current < this.tokens.length && this.peek().type !== tokens_1.TokenType.KwEnd) {
                 body.push(this.parseStatement());
             }
             this.expect(tokens_1.TokenType.KwEnd, "'end' attendu à la fin de la fonction.");
         }
-        else {
-            throw new Error(`[LLP Parser Error] Corps de fonction '{ ... }' ou 'then ... end' attendu.`);
-        }
         return {
             kind: "FunctionDeclaration",
             name: nameToken.value,
             parameters,
-            body
+            body,
+            isOverride
         };
     }
     parseClassDeclaration() {
@@ -594,8 +626,11 @@ class Parser {
                     items
                 };
             }
-            // Check if General{...}
+            // Check if General{...} or Json{...}
             if (this.peek().type === tokens_1.TokenType.OpenBrace) {
+                if (typeName === "Json" || typeName === "json") {
+                    return this.parseBraceLiteral();
+                }
                 this.advance(); // {
                 const items = this.parseExpressionList(tokens_1.TokenType.CloseBrace);
                 this.expect(tokens_1.TokenType.CloseBrace, "'}' attendu.");
@@ -615,7 +650,7 @@ class Parser {
             this.advance();
             return {
                 kind: "NumericLiteral",
-                value: parseFloat(token.value)
+                value: Number(token.value)
             };
         }
         if (token.type === tokens_1.TokenType.String) {
@@ -641,16 +676,13 @@ class Parser {
             this.advance();
             return { kind: "Identifier", name: token.value };
         }
-        // Direct List literal: { item1, item2 }
+        // Anonymous function expression: func() ... end or func() { ... }
+        if (token.type === tokens_1.TokenType.KwFunc) {
+            return this.parseAnonymousFunction();
+        }
+        // Direct List or Object literal: { item1, item2 } or { key: value, ... }
         if (token.type === tokens_1.TokenType.OpenBrace) {
-            this.advance(); // {
-            const items = this.parseExpressionList(tokens_1.TokenType.CloseBrace);
-            this.expect(tokens_1.TokenType.CloseBrace, "'}' attendu.");
-            return {
-                kind: "ListLiteral",
-                elementType: "General",
-                items
-            };
+            return this.parseBraceLiteral();
         }
         if (token.type === tokens_1.TokenType.OpenParen) {
             this.advance(); // (
@@ -674,6 +706,103 @@ class Parser {
             } while (this.peek().type !== endToken);
         }
         return items;
+    }
+    parseBraceLiteral() {
+        const openTok = this.advance(); // {
+        if (this.peek().type === tokens_1.TokenType.CloseBrace) {
+            this.advance(); // }
+            return {
+                kind: "JsonObjectLiteral",
+                pairs: [],
+                line: openTok.line
+            };
+        }
+        // Check if it's an object { key: value, ... }
+        const isKeyVal = ((this.peek().type === tokens_1.TokenType.Identifier || this.peek().type === tokens_1.TokenType.String) &&
+            this.peekNext()?.type === tokens_1.TokenType.Colon);
+        if (isKeyVal) {
+            const pairs = [];
+            do {
+                let key;
+                if (this.peek().type === tokens_1.TokenType.Identifier || this.peek().type === tokens_1.TokenType.String) {
+                    key = this.advance().value;
+                }
+                else {
+                    throw new Error(`[LLP Parser Error] Clé d'objet attendue (identifiant ou chaîne) à la ligne ${this.peek().line}`);
+                }
+                this.expect(tokens_1.TokenType.Colon, "':' attendu après la clé de l'objet.");
+                const val = this.parseExpression();
+                pairs.push({ key, value: val });
+                if (this.peek().type === tokens_1.TokenType.Comma) {
+                    this.advance();
+                }
+                else {
+                    break;
+                }
+            } while (this.peek().type !== tokens_1.TokenType.CloseBrace);
+            this.expect(tokens_1.TokenType.CloseBrace, "'}' attendu à la fin de l'objet.");
+            return {
+                kind: "JsonObjectLiteral",
+                pairs,
+                line: openTok.line
+            };
+        }
+        else {
+            const items = this.parseExpressionList(tokens_1.TokenType.CloseBrace);
+            this.expect(tokens_1.TokenType.CloseBrace, "'}' attendu.");
+            return {
+                kind: "ListLiteral",
+                elementType: "General",
+                items,
+                line: openTok.line
+            };
+        }
+    }
+    parseAnonymousFunction() {
+        const funcTok = this.advance(); // func
+        let funcName;
+        if (this.peek().type === tokens_1.TokenType.Identifier) {
+            funcName = this.advance().value;
+        }
+        this.expect(tokens_1.TokenType.OpenParen, "'(' attendu après 'func'.");
+        const parameters = [];
+        if (this.peek().type !== tokens_1.TokenType.CloseParen) {
+            do {
+                if (this.isTypeKeyword(this.peek().type)) {
+                    this.advance();
+                }
+                const paramToken = this.expect(tokens_1.TokenType.Identifier, "Nom de paramètre attendu.");
+                parameters.push(paramToken.value);
+                if (this.peek().type === tokens_1.TokenType.Comma) {
+                    this.advance();
+                }
+                else {
+                    break;
+                }
+            } while (this.peek().type !== tokens_1.TokenType.CloseParen);
+        }
+        this.expect(tokens_1.TokenType.CloseParen, "')' attendu après les paramètres.");
+        let body = [];
+        if (this.peek().type === tokens_1.TokenType.OpenBrace) {
+            const block = this.parseBlockStatement();
+            body = block.body;
+        }
+        else {
+            if (this.peek().type === tokens_1.TokenType.KwThen) {
+                this.advance(); // optional 'then'
+            }
+            while (this.current < this.tokens.length && this.peek().type !== tokens_1.TokenType.KwEnd) {
+                body.push(this.parseStatement());
+            }
+            this.expect(tokens_1.TokenType.KwEnd, "'end' attendu à la fin de la fonction anonyme.");
+        }
+        return {
+            kind: "FunctionExpr",
+            name: funcName,
+            parameters,
+            body,
+            line: funcTok.line
+        };
     }
     parseArgumentExpression() {
         if (this.peek().type === tokens_1.TokenType.Identifier && this.peekNext()?.type === tokens_1.TokenType.Colon) {

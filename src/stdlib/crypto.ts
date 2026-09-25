@@ -81,14 +81,16 @@ export function registerCrypto(env: Environment) {
   });
 
   // Hachage SHA-256
-  cryptoObj.SetProperty("Hash", {
+  const hashFn: RuntimeVal = {
     type: "native_fn",
     call: (args: RuntimeVal[]) => {
       const text = args[0]?.type === "string" ? args[0].value : "";
       const hash = crypto.createHash("sha256").update(text).digest("hex");
       return MK_STRING(hash);
     }
-  });
+  };
+  cryptoObj.SetProperty("Hash", hashFn);
+  cryptoObj.SetProperty("ComputeHash", hashFn);
 
   env.declareVar("Crypto", { type: "instance", instance: cryptoObj }, "General");
 }

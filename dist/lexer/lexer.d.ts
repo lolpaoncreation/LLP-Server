@@ -10,6 +10,7 @@ export declare class Lexer {
     private advance;
     private peek;
     private isDigit;
+    private isHexDigit;
     private isAlpha;
     private isAlphaNumeric;
     private makeToken;

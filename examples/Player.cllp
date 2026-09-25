@@ -7,6 +7,6 @@ class Player then
 
     function TakeDamage(amount) then
         Health = Health - amount
-        print("Aïe !", Name, "a subi", amount, "dégâts. Santé restante :", Health)
+        print("Ouch!", Name, "took", amount, "damage. Remaining health:", Health)
     end
 end

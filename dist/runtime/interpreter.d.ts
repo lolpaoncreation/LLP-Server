@@ -1,6 +1,8 @@
 import { Statement } from "../parser/ast";
 import { Environment } from "./environment";
 import { RuntimeVal } from "./values";
+export declare function unwrapRuntimeVal(val: RuntimeVal): any;
+export declare function wrapRawValue(val: any): RuntimeVal;
 export declare class ReturnValue {
     value: RuntimeVal;
     constructor(value: RuntimeVal);
